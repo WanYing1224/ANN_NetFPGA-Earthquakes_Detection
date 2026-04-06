@@ -1,11 +1,9 @@
 `timescale 1ns/1ps
 ///////////////////////////////////////////////////////////////////////////////
-// convertible_fifo.v - Convertible FIFO / Dual-Port SRAM
+// convertible_fifo.v - Convertible FIFO (Refactored)
 //
-// All BRAM reads are SYNCHRONOUS so XST infers Block RAM, not FF.
-// True dual-port BRAM:
-//   Port A: Network side writes (capture) + reads (output replay)
-//   Port B: Processor side reads + writes
+// Separated the memory array into 'feature_bram'. This module now only
+// handles the Network packet capture/replay logic and mode switching.
 ///////////////////////////////////////////////////////////////////////////////
 
 module convertible_fifo (
@@ -41,43 +39,37 @@ module convertible_fifo (
 );
 
     // ----- Mode definitions -----
-    // Encoding chosen so reset default (00) = IDLE/passthrough
     localparam MODE_IDLE     = 2'b00;
     localparam MODE_PROC     = 2'b01;
     localparam MODE_FIFO_OUT = 2'b10;
     localparam MODE_FIFO_IN  = 2'b11;
 
     // =========================================================
-    // True Dual-Port BRAM: 256 x 72-bit
-    // Synchronous read on both ports -> XST infers Block RAM
+    // External BRAM Instantiation (Replaced internal reg array)
     // =========================================================
-    (* RAM_STYLE = "BLOCK" *)
-    reg [71:0] bram [0:255];
-
-    // Port A: address + read register
     reg [7:0]  porta_addr;
-    reg [71:0] porta_rdata;
+    wire [71:0] porta_rdata; // Changed from reg to wire to receive from module
     reg        porta_we;
     reg [71:0] porta_wdata;
+    
+    // Gate the processor write-enable by checking the mode
+    wire proc_we_gated = proc_we && (mode == MODE_PROC);
 
-    // Port B: address + read register
-    reg [71:0] portb_rdata;
-
-    // Port A: synchronous read/write
-    always @(posedge clk) begin
-        if (porta_we)
-            bram[porta_addr] <= porta_wdata;
-        porta_rdata <= bram[porta_addr];
-    end
-
-    // Port B: synchronous read/write
-    always @(posedge clk) begin
-        if (proc_we && mode == MODE_PROC)
-            bram[proc_addr] <= proc_wdata;
-        portb_rdata <= bram[proc_addr];
-    end
-
-    assign proc_rdata = portb_rdata;
+    feature_bram shared_mem (
+        .clk    (clk),
+        
+        // Port A (Network/FIFO control)
+        .we_a   (porta_we),
+        .addr_a (porta_addr),
+        .din_a  (porta_wdata),
+        .dout_a (porta_rdata),
+        
+        // Port B (Processor Control)
+        .we_b   (proc_we_gated),
+        .addr_b (proc_addr),
+        .din_b  (proc_wdata),
+        .dout_b (proc_rdata)
+    );
 
     // ----- FIFO Pointers -----
     reg [7:0] head;
@@ -101,14 +93,13 @@ module convertible_fifo (
                         && (tail < 8'd250);
 
     // ----- FIFO Output state machine -----
-    // Need 2-cycle pipeline: cycle 1 = issue read, cycle 2 = data available
     localparam OUT_IDLE    = 2'b00;
-    localparam OUT_READING = 2'b01;  // read issued, waiting for data
-    localparam OUT_SENDING = 2'b10;  // data valid, sending to output
+    localparam OUT_READING = 2'b01;  
+    localparam OUT_SENDING = 2'b10;
     localparam OUT_DONE    = 2'b11;
 
     reg [1:0] out_state;
-    reg [7:0] out_rd_addr;   // address we're currently reading
+    reg [7:0] out_rd_addr;   
 
     // ----- Main Control Logic -----
     always @(posedge clk) begin
@@ -135,7 +126,6 @@ module convertible_fifo (
             // FIFO Input: Capture packet word by word
             // =============================================
             if (mode == MODE_FIFO_IN && net_in_wr && cap_state != CAP_DONE) begin
-                // Write to BRAM via Port A
                 porta_addr  <= tail;
                 porta_wdata <= {net_in_ctrl, net_in_data};
                 porta_we    <= 1'b1;
@@ -161,14 +151,12 @@ module convertible_fifo (
 
             // =============================================
             // FIFO Output: Replay packet to network
-            // Uses Port A for reading with 1-cycle latency
             // =============================================
             if (mode == MODE_FIFO_OUT) begin
                 case (out_state)
                     OUT_IDLE: begin
                         net_out_wr <= 1'b0;
                         if (word_count > 0) begin
-                            // Issue first read
                             porta_addr  <= head;
                             out_rd_addr <= head;
                             out_state   <= OUT_READING;
@@ -176,24 +164,20 @@ module convertible_fifo (
                     end
 
                     OUT_READING: begin
-                        // Data will be available on porta_rdata next cycle
                         net_out_wr <= 1'b0;
                         out_state  <= OUT_SENDING;
                     end
 
                     OUT_SENDING: begin
                         if (net_out_rdy) begin
-                            // porta_rdata is now valid for out_rd_addr
                             net_out_data <= porta_rdata[63:0];
                             net_out_ctrl <= porta_rdata[71:64];
                             net_out_wr   <= 1'b1;
                             head         <= out_rd_addr + 1;
 
                             if (out_rd_addr + 1 >= tail) begin
-                                // Last word sent
                                 out_state <= OUT_DONE;
                             end else begin
-                                // Issue next read
                                 porta_addr  <= out_rd_addr + 1;
                                 out_rd_addr <= out_rd_addr + 1;
                                 out_state   <= OUT_READING;
@@ -205,7 +189,6 @@ module convertible_fifo (
 
                     OUT_DONE: begin
                         net_out_wr  <= 1'b0;
-                        // Auto-reset
                         head        <= 8'd0;
                         tail        <= 8'd0;
                         word_count  <= 8'd0;
@@ -218,7 +201,6 @@ module convertible_fifo (
                 net_out_wr <= 1'b0;
                 out_state  <= OUT_IDLE;
             end
-
         end
     end
 
