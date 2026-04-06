@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SoC Architecture - Dual BRAM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #080c14;
+    color: #c8d8f0;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 1.3rem;
+    letter-spacing: 0.18em;
+    color: #7ecfff;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-shadow: 0 0 24px rgba(126,207,255,0.5);
+  }
+  .subtitle {
+    font-size: 0.72rem;
+    color: #4a7090;
+    letter-spacing: 0.12em;
+    margin-bottom: 36px;
+  }
+
+  svg {
+    width: 100%;
+    max-width: 960px;
+    height: auto;
+    filter: drop-shadow(0 0 40px rgba(40,100,160,0.3));
+  }
+
+  .chip-border { fill: none; stroke: #1a3a5c; stroke-width: 2; rx: 8; }
+  .module-fill { fill: #0a1828; }
+  .module-border { fill: none; stroke-width: 1.5; }
+
+  .label-main {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    fill: #7ecfff;
+  }
+  .label-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9.5px;
+    fill: #4a8aaa;
+  }
+  .label-tiny {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8.5px;
+    fill: #3a6a80;
+  }
+
+  .arrow { fill: none; stroke-width: 1.5; marker-end: url(#arrowBlue); }
+  .arrow-green { fill: none; stroke-width: 1.5; marker-end: url(#arrowGreen); }
+  .arrow-amber { fill: none; stroke-width: 1.5; marker-end: url(#arrowAmber); }
+
+  .badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .badge-new { fill: #4ac860; }
+  .badge-box-new { fill: #0a2010; stroke: #4ac860; stroke-width: 1; }
+  .badge-pass { fill: #60c8c8; }
+  .badge-box-pass { fill: #081a1a; stroke: #40a8a8; stroke-width: 1; }
+
+  .glow-blue  { filter: drop-shadow(0 0 6px rgba(126,207,255,0.6)); }
+  .glow-green { filter: drop-shadow(0 0 6px rgba(74,200,160,0.6)); }
+  .glow-amber { filter: drop-shadow(0 0 5px rgba(200,160,74,0.5)); }
+</style>
+</head>
+<body>
+
+<h1>SoC Architecture</h1>
+<div class="subtitle">NetFPGA XC2VP30 &nbsp;·&nbsp; ARM 4-Thread Pipeline + Dual-BRAM BFloat16 GPU Tensor Core</div>
+
+<svg viewBox="0 0 960 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3a7aaa"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4ac8a0"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#c8a04a"/>
+    </marker>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#0d2040" stroke-width="0.5"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="10" y="10" width="940" height="700" rx="12" fill="url(#grid)" stroke="#1a3a5c" stroke-width="2"/>
+  <rect x="10" y="10" width="940" height="700" rx="12" fill="none" stroke="#2a5a8c" stroke-width="1.5" filter="url(#glow)"/>
+
+  <text x="480" y="34" text-anchor="middle" class="label-main" font-size="13">Virtex-II Pro XC2VP30</text>
+  <text x="480" y="50" text-anchor="middle" class="label-sub">13,696 Slices · 232 BRAMs · 232 DSP18s</text>
+  <line x1="60" y1="58" x2="900" y2="58" stroke="#1a3a5c" stroke-width="1"/>
+
+  <rect x="28" y="68" width="220" height="620" rx="8" fill="#060e1c" stroke="#1a3358" stroke-width="1.5"/>
+  <text x="138" y="90" text-anchor="middle" class="label-main" font-size="10" fill="#4a6a9a">NF2 PLATFORM</text>
+  <text x="138" y="104" text-anchor="middle" class="label-tiny">reference design</text>
+
+  <rect x="38" y="114" width="200" height="46" rx="5" fill="#050c18" stroke="#1a3050" stroke-width="1"/>
+  <text x="138" y="132" text-anchor="middle" class="label-sub" fill="#3a6a8a">Ethernet Ports</text>
+  <text x="138" y="147" text-anchor="middle" class="label-tiny">4 × 1 Gbps MAC/PHY</text>
+
+  <rect x="38" y="172" width="200" height="50" rx="5" fill="#070e1e" stroke="#1e3858" stroke-width="1.2"/>
+  <text x="138" y="192" text-anchor="middle" class="label-sub" fill="#5a8aaa">input_arbiter</text>
+  <text x="138" y="207" text-anchor="middle" class="label-tiny">8-port round-robin</text>
+
+  <rect x="38" y="234" width="200" height="56" rx="5" fill="#0a0f18" stroke="#2a3040" stroke-width="1" stroke-dasharray="4 2"/>
+  <text x="138" y="255" text-anchor="middle" class="label-sub" fill="#3a4a5a">output_port_lookup</text>
+  <text x="138" y="270" text-anchor="middle" class="label-tiny">wire passthrough</text>
+  <rect x="70" y="277" width="136" height="10" rx="3" fill="#0f1520" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="138" y="285" text-anchor="middle" class="badge" fill="#3a5a80">REPLACED FOR LUT REDUCTION</text>
+
+  <rect x="38" y="302" width="200" height="50" rx="5" fill="#070e1e" stroke="#1e3858" stroke-width="1.2"/>
+  <text x="138" y="322" text-anchor="middle" class="label-sub" fill="#5a8aaa">output_queues</text>
+  <text x="138" y="337" text-anchor="middle" class="label-tiny">SRAM-backed, 8 queues</text>
+
+  <rect x="38" y="364" width="200" height="50" rx="5" fill="#070e1e" stroke="#1e3858" stroke-width="1.2"/>
+  <text x="138" y="384" text-anchor="middle" class="label-sub" fill="#5a8aaa">udp_reg_master</text>
+  <text x="138" y="399" text-anchor="middle" class="label-tiny">PCI register bus</text>
+
+  <rect x="38" y="426" width="200" height="64" rx="5" fill="#070e1e" stroke="#1e3858" stroke-width="1.2"/>
+  <text x="138" y="446" text-anchor="middle" class="label-sub" fill="#5a8aaa">generic_regs</text>
+  <text x="138" y="461" text-anchor="middle" class="label-tiny">6 SW + 5 HW registers</text>
+  <text x="138" y="476" text-anchor="middle" class="label-tiny">base: 0x2000100</text>
+
+  <rect x="38" y="502" width="95" height="44" rx="5" fill="#07100e" stroke="#1a3828" stroke-width="1"/>
+  <text x="85" y="521" text-anchor="middle" class="label-sub" fill="#4a8a7a">SRAM</text>
+  <text x="85" y="535" text-anchor="middle" class="label-tiny">19-bit addr</text>
+
+  <rect x="143" y="502" width="95" height="44" rx="5" fill="#0a0e18" stroke="#28283a" stroke-width="1"/>
+  <text x="190" y="521" text-anchor="middle" class="label-sub" fill="#5a5a8a">DRAM</text>
+  <text x="190" y="535" text-anchor="middle" class="label-tiny">reserved</text>
+
+  <rect x="264" y="68" width="676" height="620" rx="8" fill="#080f1e" stroke="#2a5080" stroke-width="2"/>
+  <text x="602" y="90" text-anchor="middle" class="label-main" font-size="12" fill="#7ecfff">fifo_top.v — Network Processor</text>
+  <text x="602" y="106" text-anchor="middle" class="label-sub" fill="#3a6a90">Integration: ARM CPU + GPU BFloat16 Tensor Core</text>
+  <line x1="280" y1="112" x2="924" y2="112" stroke="#1a3a5c" stroke-width="0.8"/>
+
+  <rect x="278" y="122" width="300" height="340" rx="7" fill="#070e1c" stroke="#1e4878" stroke-width="1.5"/>
+  <text x="428" y="144" text-anchor="middle" class="label-main" fill="#60b0ff">ARM CPU</text>
+  <text x="428" y="158" text-anchor="middle" class="label-sub">4-Thread Interleaved Pipeline</text>
+  <line x1="290" y1="165" x2="566" y2="165" stroke="#1a3a5c" stroke-width="0.7"/>
+
+  <rect x="288" y="174" width="130" height="70" rx="5" fill="#08111e" stroke="#1e4060" stroke-width="1.2"/>
+  <text x="353" y="194" text-anchor="middle" class="label-sub" fill="#60a0d0">IMEM</text>
+  <text x="353" y="208" text-anchor="middle" class="label-tiny">512 × 32-bit BRAM</text>
+  <text x="353" y="220" text-anchor="middle" class="label-tiny">PC[8:0] fetch</text>
+
+  <rect x="428" y="174" width="130" height="70" rx="5" fill="#08111e" stroke="#1e4060" stroke-width="1.2"/>
+  <text x="493" y="194" text-anchor="middle" class="label-sub" fill="#60a0d0">DMEM</text>
+  <text x="493" y="208" text-anchor="middle" class="label-tiny">256 × 32-bit BRAM</text>
+  <text x="493" y="220" text-anchor="middle" class="label-tiny">write-first Port A</text>
+
+  <rect x="288" y="254" width="270" height="90" rx="5" fill="#060c18" stroke="#183050" stroke-width="1"/>
+  <text x="423" y="272" text-anchor="middle" class="label-sub" fill="#5090b8">5-Stage Pipeline (×4 Threads)</text>
+  <rect x="295" y="280" width="42" height="24" rx="3" fill="#0a1828" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="316" y="296" text-anchor="middle" class="label-tiny" fill="#4a80a0">IF</text>
+  <rect x="342" y="280" width="42" height="24" rx="3" fill="#0a1828" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="363" y="296" text-anchor="middle" class="label-tiny" fill="#4a80a0">ID</text>
+  <rect x="389" y="280" width="42" height="24" rx="3" fill="#0a1828" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="410" y="296" text-anchor="middle" class="label-tiny" fill="#4a80a0">EX</text>
+  <rect x="436" y="280" width="42" height="24" rx="3" fill="#0a1828" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="457" y="296" text-anchor="middle" class="label-tiny" fill="#4a80a0">MEM</text>
+  <rect x="483" y="280" width="42" height="24" rx="3" fill="#0a1828" stroke="#2a4060" stroke-width="0.8"/>
+  <text x="504" y="296" text-anchor="middle" class="label-tiny" fill="#4a80a0">WB</text>
+  <line x1="337" y1="292" x2="342" y2="292" stroke="#2a5070" stroke-width="1" marker-end="url(#arrowBlue)"/>
+  <line x1="384" y1="292" x2="389" y2="292" stroke="#2a5070" stroke-width="1" marker-end="url(#arrowBlue)"/>
+  <line x1="431" y1="292" x2="436" y2="292" stroke="#2a5070" stroke-width="1" marker-end="url(#arrowBlue)"/>
+  <line x1="478" y1="292" x2="483" y2="292" stroke="#2a5070" stroke-width="1" marker-end="url(#arrowBlue)"/>
+  <text x="423" y="324" text-anchor="middle" class="label-tiny">T0 PC:0 · T1 PC:48 · T2 PC:96 · T3 PC:144</text>
+  <text x="423" y="336" text-anchor="middle" class="label-tiny">Round-robin scheduling, no hazard stalls</text>
+
+  <rect x="288" y="354" width="130" height="50" rx="5" fill="#08111e" stroke="#1e4060" stroke-width="1.2"/>
+  <text x="353" y="374" text-anchor="middle" class="label-sub" fill="#60a0d0">Register File</text>
+  <text x="353" y="388" text-anchor="middle" class="label-tiny">4×16 regs, WRITE_FIRST</text>
+
+  <rect x="428" y="354" width="130" height="50" rx="5" fill="#08111e" stroke="#1e4060" stroke-width="1.2"/>
+  <text x="493" y="374" text-anchor="middle" class="label-sub" fill="#60a0d0">ALU</text>
+  <text x="493" y="388" text-anchor="middle" class="label-tiny">ADD/SUB/AND/OR/XOR/MOV</text>
+
+  <rect x="288" y="414" width="270" height="38" rx="5" fill="#060c14" stroke="#183050" stroke-width="1"/>
+  <text x="423" y="431" text-anchor="middle" class="label-tiny" fill="#5090b8">MIN_CYCLES guard → cpu_done flag</text>
+  <text x="423" y="444" text-anchor="middle" class="label-tiny">arm_done[POINTERS:0] · arm_running[POINTERS:1]</text>
+
+  <rect x="594" y="122" width="316" height="340" rx="7" fill="#071018" stroke="#1e4860" stroke-width="1.5"/>
+  <text x="752" y="144" text-anchor="middle" class="label-main" fill="#60d0b0">GPU BFloat16 Tensor Core</text>
+  <text x="752" y="158" text-anchor="middle" class="label-sub">Single-Thread Programmable Pipeline</text>
+  <line x1="606" y1="165" x2="902" y2="165" stroke="#1a3a4c" stroke-width="0.7"/>
+
+  <rect x="604" y="174" width="140" height="70" rx="5" fill="#071018" stroke="#1e4858" stroke-width="1.2"/>
+  <text x="674" y="194" text-anchor="middle" class="label-sub" fill="#50c0a0">GPU IMEM</text>
+  <text x="674" y="208" text-anchor="middle" class="label-tiny">32 × 32-bit BRAM</text>
+  <text x="674" y="220" text-anchor="middle" class="label-tiny">FSM fetch (S_FETCH_WAIT)</text>
+
+  <rect x="754" y="174" width="148" height="70" rx="5" fill="#071018" stroke="#1e4858" stroke-width="1.2"/>
+  <text x="828" y="194" text-anchor="middle" class="label-sub" fill="#50c0a0">Register File</text>
+  <text x="828" y="208" text-anchor="middle" class="label-tiny">8 × 64-bit BRAM</text>
+  <text x="828" y="220" text-anchor="middle" class="label-tiny">4 read ports (rs1,rs2,rs3,rd)</text>
+
+  <rect x="604" y="254" width="140" height="98" rx="5" fill="#060e16" stroke="#183848" stroke-width="1"/>
+  <text x="674" y="271" text-anchor="middle" class="label-sub" fill="#50b090">FSM Controller</text>
+  <text x="674" y="285" text-anchor="middle" class="label-tiny">IDLE→FETCH→</text>
+  <text x="674" y="297" text-anchor="middle" class="label-tiny">FETCH_WAIT→DECODE→</text>
+  <text x="674" y="309" text-anchor="middle" class="label-tiny">EXEC→MEM→MEM2→</text>
+  <text x="674" y="321" text-anchor="middle" class="label-tiny">WB→DONE</text>
+  <text x="674" y="340" text-anchor="middle" class="label-tiny">gpu_done[POINTERS:2]</text>
+
+  <rect x="754" y="254" width="148" height="98" rx="5" fill="#08100e" stroke="#1a3828" stroke-width="1.2" filter="url(#glow)"/>
+  <text x="828" y="273" text-anchor="middle" class="label-sub" fill="#60e0a0">Tensor Unit</text>
+  <text x="828" y="287" text-anchor="middle" class="label-tiny">4-lane BF16 FMA</text>
+  <text x="828" y="300" text-anchor="middle" class="label-tiny">bf16_mac ×4</text>
+  <rect x="762" y="308" width="30" height="16" rx="2" fill="#0a1e12" stroke="#2a5030" stroke-width="0.8"/>
+  <text x="777" y="319" text-anchor="middle" class="label-tiny" fill="#40a060" font-size="7">FMA</text>
+  <rect x="797" y="308" width="30" height="16" rx="2" fill="#0a1e12" stroke="#2a5030" stroke-width="0.8"/>
+  <text x="812" y="319" text-anchor="middle" class="label-tiny" fill="#40a060" font-size="7">FMA</text>
+  <rect x="832" y="308" width="30" height="16" rx="2" fill="#0a1e12" stroke="#2a5030" stroke-width="0.8"/>
+  <text x="847" y="319" text-anchor="middle" class="label-tiny" fill="#40a060" font-size="7">FMA</text>
+  <rect x="867" y="308" width="30" height="16" rx="2" fill="#0a1e12" stroke="#2a5030" stroke-width="0.8"/>
+  <text x="882" y="319" text-anchor="middle" class="label-tiny" fill="#40a060" font-size="7">FMA</text>
+  <text x="828" y="340" text-anchor="middle" class="label-tiny">Rs1(Feat) × Rs2(Wgt) + Rs3 → Rd</text>
+
+  <rect x="604" y="362" width="298" height="40" rx="5" fill="#060e16" stroke="#183848" stroke-width="1"/>
+  <text x="753" y="382" text-anchor="middle" class="label-sub" fill="#50b090">LD/ST Unit (gpu_ldst.v)</text>
+  <text x="753" y="394" text-anchor="middle" class="label-tiny">LD64 (Feat) / LDW64 (Wgt) · Addr split via Bit 10</text>
+
+  <rect x="604" y="412" width="298" height="40" rx="5" fill="#060e16" stroke="#183848" stroke-width="1"/>
+  <text x="753" y="430" text-anchor="middle" class="label-sub" fill="#50b090">ALU (simplified)</text>
+  <text x="753" y="444" text-anchor="middle" class="label-tiny">READ_TID · LD64/LDW64 addr · ST64 addr</text>
+
+  <rect x="278" y="478" width="632" height="90" rx="7" fill="#07120f" stroke="#1e4832" stroke-width="1.8" filter="url(#glow)"/>
+  <text x="594" y="499" text-anchor="middle" class="label-main" fill="#50d090">Dual-BRAM Memory Subsystem (Harvard Architecture)</text>
+  <text x="594" y="513" text-anchor="middle" class="label-sub" fill="#3a9060">Feature BRAM (FIFO, Base 0x000) & Weight BRAM (Base 0x400)</text>
+
+  <rect x="288" y="523" width="170" height="36" rx="4" fill="#060e0c" stroke="#1a3828" stroke-width="1"/>
+  <text x="373" y="538" text-anchor="middle" class="label-tiny" fill="#4ab880">Feature BRAM (FIFO)</text>
+  <text x="373" y="551" text-anchor="middle" class="label-tiny">Port A: Net | Port B: Proc</text>
+
+  <rect x="468" y="523" width="150" height="36" rx="4" fill="#060e0c" stroke="#1a3828" stroke-width="1"/>
+  <text x="543" y="538" text-anchor="middle" class="label-tiny" fill="#4ab880">Weight BRAM (DP-RAM)</text>
+  <text x="543" y="551" text-anchor="middle" class="label-tiny">Port A: GPU | Port B: Proc</text>
+
+  <rect x="628" y="523" width="270" height="36" rx="4" fill="#0c1810" stroke="#2a6040" stroke-width="1"/>
+  <text x="763" y="538" text-anchor="middle" class="label-tiny" fill="#60d090">Address Decoder & Priority MUX</text>
+  <text x="763" y="551" text-anchor="middle" class="label-tiny">Bit 10: 0=Feat, 1=Wgt</text>
+
+  <path d="M 628 535 L 458 535" fill="none" stroke="#3a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <path d="M 628 547 L 618 547" fill="none" stroke="#3a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <rect x="278" y="582" width="632" height="90" rx="7" fill="#0c0820" stroke="#3a2860" stroke-width="1.5"/>
+  <text x="594" y="602" text-anchor="middle" class="label-main" fill="#a070e0">PCI Programming Interface (fifo_top.v)</text>
+
+  <rect x="288" y="612" width="290" height="50" rx="4" fill="#0a0618" stroke="#2a1848" stroke-width="1"/>
+  <text x="433" y="628" text-anchor="middle" class="label-tiny" fill="#8060c0">SW Registers (host writes)</text>
+  <text x="433" y="641" text-anchor="middle" class="label-tiny">CMD · PROC_ADDR · WDATA_HI/LO</text>
+  <text x="433" y="654" text-anchor="middle" class="label-tiny">WDATA_CTRL · RDATA_SEL</text>
+
+  <rect x="590" y="612" width="310" height="50" rx="4" fill="#0a0618" stroke="#2a1848" stroke-width="1"/>
+  <text x="745" y="628" text-anchor="middle" class="label-tiny" fill="#8060c0">HW Registers (host reads)</text>
+  <text x="745" y="641" text-anchor="middle" class="label-tiny">STATUS · RDATA_HI/LO · RDATA_CTRL</text>
+  <text x="745" y="654" text-anchor="middle" class="label-tiny">POINTERS [arm_done|gpu_done|…]</text>
+
+  <rect x="10" y="690" width="940" height="0" rx="0" fill="none" stroke="#1a3a5c" stroke-width="1"/>
+
+  <line x1="138" y1="160" x2="138" y2="172" stroke="#3a6a8a" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="138" y1="222" x2="138" y2="234" stroke="#3a6a8a" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="138" y1="290" x2="138" y2="302" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arrowBlue)"/>
+
+  <path d="M 238 285 L 260 285 L 260 541 L 288 541" stroke="#3a6a8a" stroke-width="1.5" fill="none" marker-end="url(#arrowBlue)"/>
+  <text x="250" y="415" text-anchor="middle" class="label-tiny" fill="#3a6a8a" transform="rotate(-90,250,415)">net_data</text>
+
+  <line x1="248" y1="458" x2="278" y2="600" stroke="#5a3a90" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arrowAmber)"/>
+
+  <line x1="353" y1="244" x2="353" y2="254" stroke="#3a7aaa" stroke-width="1.2" marker-end="url(#arrowBlue)"/>
+  <line x1="493" y1="244" x2="493" y2="254" stroke="#3a7aaa" stroke-width="1.2" marker-end="url(#arrowBlue)"/>
+
+  <line x1="428" y1="462" x2="428" y2="478" stroke="#3060a0" stroke-width="1.2" stroke-dasharray="3 2" marker-end="url(#arrowBlue)"/>
+  <text x="443" y="472" class="label-tiny" fill="#3060a0">done</text>
+
+  <line x1="744" y1="300" x2="754" y2="300" stroke="#3a9060" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+
+  <line x1="820" y1="402" x2="820" y2="523" stroke="#3a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <text x="830" y="462" class="label-tiny" fill="#3a9060">LD/ST R/W</text>
+
+  <path d="M 700 402 L 700 480 L 543 480 L 543 523" fill="none" stroke="#3a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <text x="650" y="476" class="label-tiny" fill="#3a9060">Weight Fetch</text>
+
+  <path d="M 433 612 L 433 570 L 763 570 L 763 559" fill="none" stroke="#4a9060" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arrowGreen)"/>
+  <text x="613" y="566" class="label-tiny" fill="#4a9060">proc_wdata</text>
+
+  <path d="M 373 559 L 373 575 L 685 575 L 685 612" fill="none" stroke="#4a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  
+  <path d="M 543 559 L 543 585 L 725 585 L 725 612" fill="none" stroke="#4a9060" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <text x="661" y="582" class="label-tiny" fill="#4a9060">proc_rdata / wgt_rdata</text>
+  
+  <path d="M 373 523 L 373 470 L 800 470 L 800 402" fill="none" stroke="#3a9060" stroke-width="1.5" stroke-dasharray="2 2" marker-end="url(#arrowGreen)"/>
+
+  <line x1="880" y1="462" x2="880" y2="612" stroke="#308060" stroke-width="1.2" stroke-dasharray="3 2" marker-end="url(#arrowAmber)"/>
+  <text x="890" y="545" class="label-tiny" fill="#308060">done</text>
+
+  <line x1="480" y1="672" x2="480" y2="685" stroke="#8050d0" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="700" y1="672" x2="700" y2="685" stroke="#8050d0" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <text x="594" y="698" text-anchor="middle" class="label-tiny" fill="#6040a0">regwrite / regread  ·  load_and_test.sh + fifo_reg.pl</text>
+
+  <rect x="28" y="558" width="222" height="130" rx="6" fill="#060a14" stroke="#1a2a40" stroke-width="1"/>
+  <text x="139" y="576" text-anchor="middle" class="label-sub" fill="#3a6080">LEGEND</text>
+  <line x1="40" y1="588" x2="70" y2="588" stroke="#3a7aaa" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <text x="78" y="592" class="label-tiny">data / control flow</text>
+  <line x1="40" y1="604" x2="70" y2="604" stroke="#3a7aaa" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arrowBlue)"/>
+  <text x="78" y="608" class="label-tiny">passthrough / status</text>
+  <line x1="40" y1="620" x2="70" y2="620" stroke="#c8a04a" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arrowAmber)"/>
+  <text x="78" y="624" class="label-tiny">PCI register bus</text>
+  <rect x="40" y="648" width="30" height="10" rx="3" fill="#0a0f18" stroke="#2a3040" stroke-width="0.8" stroke-dasharray="3 2"/>
+  <text x="78" y="656" class="label-tiny" fill="#3a4a5a">passthrough module</text>
+  <text x="139" y="678" text-anchor="middle" class="label-tiny" fill="#2a4a6a">XC2VP30 · 90% slice utilization</text>
+
+</svg>
+</body>
+</html>
