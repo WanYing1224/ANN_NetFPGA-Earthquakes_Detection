@@ -270,8 +270,8 @@ module integration_tb;
         $display("[1] Program GPU IMEM (BF_MAC kernel)");
         gpu_imem_write(0, 32'h04400000); // READ_TID R1
         gpu_imem_write(1, 32'h0C800000); // LD64   R2, R0, 0  (Load Feature from 0x000)
-        gpu_imem_write(2, 32'h0EC00000); // LDW64  R3, R0, 0  (Load Weight from 0x400)
-        gpu_imem_write(3, 32'h0F000008); // LDW64  R4, R0, 8  (Load Weight from 0x408)
+        gpu_imem_write(2, 32'h14C00000); // LDW64  R3, R0, 0  (Load Weight from 0x400)
+        gpu_imem_write(3, 32'h15000008); // LDW64  R4, R0, 8  (Load Weight from 0x408)
         gpu_imem_write(4, 32'h8548D000); // BF_MAC R5, R2, R3, R4
         gpu_imem_write(5, 32'h11440000); // ST64   R5, R1, 0  (Store Result to 0x000)
 
@@ -283,7 +283,7 @@ module integration_tb;
         
         // Base 0x400 -> Weight BRAM [cite: 143, 144]
         bram_write_host(32'h400, 64'h3FC03FC03FC03FC0); // VecB (Weights = 1.5)
-        bram_write_host(32'h408, 64'h3F003F003F003F00); // VecC (Weights = 0.5)
+        bram_write_host(32'h404, 64'h3F003F003F003F00); // VecC (Weights = 0.5)
 
         // Verify Isolation
         bram_read_host(32'h000, bram_val);
