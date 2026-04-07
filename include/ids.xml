@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nf:module xmlns:nf="http://www.NetFPGA.org/NF2_register_system" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.NetFPGA.org/NF2_register_system NF2_register_system.xsd">
+	<nf:name>fifo</nf:name>
+	<nf:prefix>fifo</nf:prefix>
+	<nf:location>udp</nf:location>
+	<nf:description>Network Processor Register Interface (Dual-BRAM Architecture)</nf:description>
+	<nf:blocksize>256</nf:blocksize>
+	<nf:registers>
+
+		<nf:register>
+			<nf:name>cmd</nf:name>
+			<nf:description>Command register.
+  [1:0] fifo_mode : 00=IDLE/passthrough  01=PROC  10=FIFO_OUT  11=FIFO_IN
+  [2]   fifo_reset : pulse to reset FIFO state machine
+  [3]   arm_start  : rising-edge triggers ARM CPU execution
+  [4]   gpu_start  : rising-edge triggers GPU (BFloat16 tensor core) execution
+  [5]   gpu2_start : rising-edge triggers GPU2 / Simple CPU execution
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>proc_addr</nf:name>
+			<nf:description>Unified address register for host access.
+  Used as byte address for Feature BRAM, Weight BRAM, ARM IMEM, ARM DMEM, and GPU IMEM.
+  Dual-BRAM Routing : Bit [10] determines target: 0 = Feature BRAM (Base 0x000), 1 = Weight BRAM (Base 0x400)
+  Feature/Weight BRAM: bits [9:2] map to the host word index
+  ARM IMEM   : bits [10:2] = 32-bit word index (rdata_sel[3]=0)
+  ARM DMEM   : bits [9:2]  = 32-bit word index (rdata_sel[3]=1)
+  GPU IMEM   : bits [6:2]  = 32-bit word index (rdata_sel[4]=0)
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>wdata_hi</nf:name>
+			<nf:description>Write data high word: data[63:32].
+  Used for 64-bit Feature/Weight BRAM writes (paired with wdata_lo).
+  For 32-bit IMEM/DMEM programming, wdata_lo carries the word.
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>wdata_lo</nf:name>
+			<nf:description>Write data low word: data[31:0].
+  For Feature/Weight BRAM: lower 32 bits of 64-bit payload.
+  For ARM/GPU IMEM and ARM DMEM programming: the 32-bit instruction or data word.
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>wdata_ctrl</nf:name>
+			<nf:description>Write control and trigger.
+  [7:0] ctrl_byte : Feature/Weight BRAM ctrl[7:0] (EOP/SOP packet markers).
+  Writing any new value triggers a host_we pulse to the targeted BRAM
+  when fifo_mode=PROC and no processor is running.
+  Upper bits [31:8] reserved.
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>rdata_sel</nf:name>
+			<nf:description>Read/write target selector and programming interface control.
+  [0]   target      : 0=Feature/Weight BRAM (default)  1=GPU2 data memory
+  [1]   arm_prog_en : 1=hold ARM in reset / programming mode
+  [2]   gpu_prog_en : 1=hold GPU in reset / programming mode
+  [3]   arm_dmem_sel: 0=ARM IMEM target  1=ARM DMEM target
+  [4]   gpu_dmem_sel: 0=GPU IMEM target  1=shared Feature/Weight BRAM
+  [5]   arm_prog_we : rising-edge pulse writes proc_addr+wdata_lo to ARM IMEM or DMEM
+  [6]   gpu_prog_we : rising-edge pulse writes proc_addr+wdata_lo to GPU IMEM
+  [31:7] reserved.
+
+  Programming workflow (mirrors Lab 6 load_and_test.sh):
+    ARM IMEM write : rdata_sel[1]=1 rdata_sel[3]=0, set proc_addr+wdata_lo, pulse rdata_sel[5]
+    ARM DMEM write : rdata_sel[1]=1 rdata_sel[3]=1, set proc_addr+wdata_lo, pulse rdata_sel[5]
+    GPU IMEM write : rdata_sel[2]=1 rdata_sel[4]=0, set proc_addr+wdata_lo, pulse rdata_sel[6]
+    GPU data (Dual-BRAM): fifo_mode=PROC, use proc_addr + wdata_hi/lo/ctrl path (Bit 10 selects Feature vs Weight)
+			</nf:description>
+			<nf:type>generic_software32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>status</nf:name>
+			<nf:description>FIFO status.
+  [1:0]  fifo_mode : current mode
+  [2]    pkt_ready : 1=one complete packet buffered
+  [15:8] pkt_len   : number of 72-bit words in packet
+			</nf:description>
+			<nf:type>generic_hardware32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>rdata_hi</nf:name>
+			<nf:description>Read data high: data[63:32] from Feature BRAM, Weight BRAM, or GPU2 dmem at proc_addr.
+  Read twice to account for synchronous BRAM read latency.
+			</nf:description>
+			<nf:type>generic_hardware32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>rdata_lo</nf:name>
+			<nf:description>Read data low: data[31:0] from Feature BRAM, Weight BRAM, or GPU2 dmem at proc_addr.</nf:description>
+			<nf:type>generic_hardware32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>rdata_ctrl</nf:name>
+			<nf:description>Read ctrl: {24b0, ctrl[7:0]} from Feature BRAM or Weight BRAM at proc_addr.</nf:description>
+			<nf:type>generic_hardware32</nf:type>
+		</nf:register>
+
+		<nf:register>
+			<nf:name>pointers</nf:name>
+			<nf:description>Processor status and FIFO pointers.
+  [0]     arm_done  : ARM halted (all threads at halt PC)
+  [1]     arm_run   : ARM executing
+  [2]     gpu_done  : GPU (BFloat16) completed
+  [3]     gpu_run   : GPU executing
+  [4]     gpu2_done : GPU2/Simple CPU completed
+  [5]     gpu2_run  : GPU2/Simple CPU executing
+  [15:8]  tail_addr : FIFO BRAM tail pointer
+  [23:16] head_addr : FIFO BRAM head pointer
+			</nf:description>
+			<nf:type>generic_hardware32</nf:type>
+		</nf:register>
+
+	</nf:registers>
+</nf:module>
