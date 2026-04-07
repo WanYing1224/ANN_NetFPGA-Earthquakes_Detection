@@ -1,0 +1,53 @@
+onerror {resume}
+quietly WaveActivateNextPane {} 0
+
+add wave -noupdate -divider {System Controls}
+add wave -noupdate -radix binary /integration_tb/clk
+add wave -noupdate -radix binary /integration_tb/rst_n
+
+add wave -noupdate -divider {Host Address Decoder}
+add wave -noupdate -radix hexadecimal /integration_tb/host_byte_addr
+add wave -noupdate -radix binary /integration_tb/sel_weight
+add wave -noupdate -radix binary /integration_tb/host_we
+add wave -noupdate -radix hexadecimal /integration_tb/host_wdata
+add wave -noupdate -radix hexadecimal /integration_tb/host_rdata
+
+add wave -noupdate -divider {Feature BRAM MUX (Base 0x000)}
+add wave -noupdate -radix binary /integration_tb/mux_we_feature
+add wave -noupdate -radix hexadecimal /integration_tb/mux_addr_feature
+add wave -noupdate -radix hexadecimal /integration_tb/mux_wdata_feature
+add wave -noupdate -radix hexadecimal /integration_tb/feature_rdata
+
+add wave -noupdate -divider {Weight BRAM MUX (Base 0x400)}
+add wave -noupdate -radix binary /integration_tb/mux_we_weight
+add wave -noupdate -radix hexadecimal /integration_tb/mux_addr_weight
+add wave -noupdate -radix hexadecimal /integration_tb/weight_rdata_b
+
+add wave -noupdate -divider {GPU Execution & Memory}
+add wave -noupdate -radix binary /integration_tb/gpu_start_r
+add wave -noupdate -radix binary /integration_tb/gpu_running
+add wave -noupdate -radix binary /integration_tb/gpu_done
+add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_addr
+add wave -noupdate -radix binary /integration_tb/gpu_bram_we
+add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_wdata
+add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_rdata
+add wave -noupdate -radix hexadecimal /integration_tb/gpu_weight_addr
+add wave -noupdate -radix hexadecimal /integration_tb/gpu_weight_rdata
+
+TreeUpdate [SetDefaultTree]
+WaveRestoreCursors {{Cursor 1} {0 ps} 0}
+configure wave -namecolwidth 250
+configure wave -valuecolwidth 150
+configure wave -justifyvalue left
+configure wave -signalnamewidth 1
+configure wave -snapdistance 10
+configure wave -datasetprefix 0
+configure wave -rowmargin 4
+configure wave -childrowmargin 2
+configure wave -gridoffset 0
+configure wave -gridperiod 1
+configure wave -griddelta 40
+configure wave -timeline 0
+configure wave -timelineunits ns
+update
+WaveRestoreZoom {0 ns} {1000 ns}

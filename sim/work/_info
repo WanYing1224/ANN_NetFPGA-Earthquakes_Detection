@@ -1,0 +1,476 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/USC CE/EE457/Modelsim_Projects
+varm_alu
+Z0 VDg1SIo80bB@j0V0VzS_@n1
+r1
+!s85 0
+31
+!i10b 1
+!s100 8Ch2mTf`fRH4:GoWcjS>42
+Iam`E>lATHYN=[^BWD2fW22
+Z1 dC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/sim
+Z2 w1775463355
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v
+L0 25
+Z3 OL;L;10.6e;65
+Z4 !s108 1775521689.000000
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v|
+!i113 0
+Z5 o-work work -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z6 tCvgOpt 0
+varm_cpu_wrapper
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 T<jL4hJ1GJFRg38zLTfaU3
+I2=@@Z87j?NUazPIkzV99[0
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_cpu_wrapper.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_cpu_wrapper.v
+L0 34
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_cpu_wrapper.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_cpu_wrapper.v|
+!i113 0
+R5
+R6
+varm_pipeline
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 G?^9_ZAiAj010c:6[D@F20
+IEnYgJlmkS;=YN3L1LT?:;3
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_pipeline.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_pipeline.v
+L0 18
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_pipeline.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_pipeline.v|
+!i113 0
+R5
+R6
+varm_regfile
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 Xb<XzkaV>g4OYP1fUGOm@0
+IVUH9[=A_0O6>em[H:CdhA2
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_regfile.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_regfile.v
+L0 11
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_regfile.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_regfile.v|
+!i113 0
+R5
+R6
+vbf16_mac
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 9jdUYFTXHlhS]4nFBX35[1
+IEmL2B5dJ?nA:<zYazP8400
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_mac.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_mac.v
+L0 33
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_mac.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_mac.v|
+!i113 0
+R5
+R6
+vconvertible_fifo
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 CZ[;?EK=B@lR8zW7N4Fe?2
+I6<d:5<i]7Y;fPWEZSB>T@2
+R1
+w1775475219
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/convertible_fifo.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/convertible_fifo.v
+L0 9
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/convertible_fifo.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/convertible_fifo.v|
+!i113 0
+R5
+R6
+vdmem_32
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 FPdf`IF4>keQ6JF6<@omZ0
+IkZk191LDBfPV0DgoKIZg83
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/dmem_32.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/dmem_32.v
+L0 23
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/dmem_32.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/dmem_32.v|
+!i113 0
+R5
+R6
+vfeature_bram
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 ?UG26gO5cald=L@SdJJen0
+IT2HUH9kVE53hTLNQAL3ba0
+R1
+w1775475209
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/feature_bram.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/feature_bram.v
+L0 6
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/feature_bram.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/feature_bram.v|
+!i113 0
+R5
+R6
+vgpu_core_min
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 K<?CY4>BHkDLT1DT8XgG90
+I>lLQVfTn8[6mKPRBhTXMR0
+R1
+w1775519302
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_core_min.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_core_min.v
+L0 7
+R3
+R4
+!s107 C:\USC CE\EE533\Final_Project\ANN_NetFPGA-Earthquakes_Detection\verilog\isa_defines.vh|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_core_min.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_core_min.v|
+!i113 0
+R5
+R6
+vgpu_imem
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 FH8k@D33WUV_1CKKZXB?51
+IWJBAGFBB;G`iKFUhaOkCk1
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_imem.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_imem.v
+L0 16
+R3
+Z7 !s108 1775521690.000000
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_imem.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_imem.v|
+!i113 0
+R5
+R6
+vgpu_ldst
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 S<Zj0Zd5]zi9ZOelKHWGK1
+I8nm9_AzzcM:T@;LTB53@K2
+R1
+w1775506652
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_ldst.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_ldst.v
+L0 8
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_ldst.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_ldst.v|
+!i113 0
+R5
+R6
+vgpu_net
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 XaPXLB`W^mI;l]0YW`6Y43
+I?RBPm2>J^T<8hVV8R?QR:1
+R1
+w1775506649
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_net.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_net.v
+L0 5
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_net.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_net.v|
+!i113 0
+R5
+R6
+vgpu_pc
+!s110 1775521690
+!i10b 1
+!s100 lA^XOP:L7R>fCDN8=fAGM1
+IYdb1o@Ii`gnBY=bG346OP0
+R0
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_pc.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_pc.v
+L0 6
+R3
+r1
+!s85 0
+31
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_pc.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_pc.v|
+!i113 0
+R5
+R6
+vgpu_regfile_min
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 G61>PREFjXQ43]T=164n:1
+IRhLFo9]TcPN`Q[_PIGWD71
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_regfile_min.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_regfile_min.v
+Z8 L0 15
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_regfile_min.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/gpu_regfile_min.v|
+!i113 0
+R5
+R6
+vimem
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 o^3RFj3joJcF9Zb;RXLj01
+IFZ7W`DbV?RSHoBo>NJJ<:0
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/imem.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/imem.v
+L0 21
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/imem.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/imem.v|
+!i113 0
+R5
+R6
+vintegration_tb
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 0K=CcFOF`mKHC<YlnY<kb1
+ISocP[_:PijT2T;UBIJ_gX2
+R1
+w1775521678
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v
+L0 9
+R3
+R4
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v|
+!i113 0
+R5
+R6
+vLUT2
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 OQM@HJQ>9K4caP3UfEAdz2
+ILJ7R=@L;J0^7PU82@I^>k2
+R1
+R2
+Z9 8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_components.v
+Z10 FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_components.v
+L0 94
+R3
+R4
+Z11 !s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_components.v|
+Z12 !s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/bf16_components.v|
+!i113 0
+R5
+R6
+n@l@u@t2
+vMULT18X18S
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 m9aHU3jodjeL7bOJd7laR3
+I_<YlK7F4z]827[ma]5lMN3
+R1
+R2
+R9
+R10
+L0 37
+R3
+R4
+R11
+R12
+!i113 0
+R5
+R6
+n@m@u@l@t18@x18@s
+vMUXCY
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 EN74TMHWNVQLWE0o6biGS0
+IY_mgKol9Qbo<R4Yck4eOB3
+R1
+R2
+R9
+R10
+L0 61
+R3
+R4
+R11
+R12
+!i113 0
+R5
+R6
+n@m@u@x@c@y
+vMUXF5
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 Ek8[[Tl:_]0bH2B4;4Y>n3
+IbamLhI9^YBjI>k=AB=JmM2
+R1
+R2
+R9
+R10
+L0 112
+R3
+R4
+R11
+R12
+!i113 0
+R5
+R6
+n@m@u@x@f5
+vtensor_unit
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 R<]@L?_KC>]e0S3hHbf:I1
+ID[l==Z_bMNI4=5gYR[NTZ0
+R1
+R2
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/tensor_unit.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/tensor_unit.v
+R8
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/tensor_unit.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/tensor_unit.v|
+!i113 0
+R5
+R6
+vweight_bram
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 l:Jj1f@UPedBI;^m:b<4k0
+I[3>_5]QbmbGWCRnl>eekL3
+R1
+w1775474998
+8C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/weight_bram.v
+FC:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/weight_bram.v
+L0 3
+R3
+R7
+!s107 C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/weight_bram.v|
+!s90 -reportprogress|300|-work|work|-vopt|-stats=none|C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/weight_bram.v|
+!i113 0
+R5
+R6
+vXORCY
+R0
+r1
+!s85 0
+31
+!i10b 1
+!s100 [GgLM;OAOiV39XIa2B>[d3
+IDhmFZbjgm[2:7D5_:N6:;1
+R1
+R2
+R9
+R10
+L0 77
+R3
+R4
+R11
+R12
+!i113 0
+R5
+R6
+n@x@o@r@c@y
