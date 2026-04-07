@@ -34,6 +34,13 @@ Model Technology ModelSim SE-64 vlog 10.6e Compiler 2018.06 Jun 23 2018
 Top level modules:
 	gpu_core_min
 
+} {} {}} {C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v} {1 {vlog -work work -vopt -stats=none {C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/testbench/integration_tb.v}
+Model Technology ModelSim SE-64 vlog 10.6e Compiler 2018.06 Jun 23 2018
+-- Compiling module integration_tb
+
+Top level modules:
+	integration_tb
+
 } {} {}} {C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v} {1 {vlog -work work -vopt -stats=none {C:/USC CE/EE533/Final_Project/ANN_NetFPGA-Earthquakes_Detection/verilog/arm_alu.v}
 Model Technology ModelSim SE-64 vlog 10.6e Compiler 2018.06 Jun 23 2018
 -- Compiling module arm_alu
