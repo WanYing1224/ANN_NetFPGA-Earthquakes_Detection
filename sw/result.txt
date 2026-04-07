@@ -1,0 +1,384 @@
+================================================================
+  Lab 10: ARM CPU + GPU BFloat16 Tensor Core
+  FIFO_BASE_ADDR = 0x2000100
+================================================================
+
+[1] Reset
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000000 (0)
+    done
+
+[2] Program ARM IMEM from imem.mem
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe3a00000 (3818913792)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe3a01038 (3818917944)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000008 (8)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe5903000 (3851431936)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000000c (12)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe2833001 (3800248321)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000010 (16)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe5803000 (3850383360)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe2800004 (3800039428)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000018 (24)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xe1500001 (3780116481)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000001c (28)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xbafffff9 (3137339385)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000020 (32)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xeafffffe (3942645758)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x000000c0 (192)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xeafffffe (3942645758)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000180 (384)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xeafffffe (3942645758)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000240 (576)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0xeafffffe (3942645758)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000022 (34)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000002 (2)
+    IMEM loaded (9 T0 words + T1/T2/T3 halts)
+
+[3] Program ARM DMEM from dmem.hex
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000001 (1)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000008 (8)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000002 (2)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000000c (12)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000003 (3)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000010 (16)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000005 (5)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000018 (24)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000006 (6)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000001c (28)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000007 (7)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000020 (32)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000008 (8)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000024 (36)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x00000009 (9)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000028 (40)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000002c (44)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x0000000b (11)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000030 (48)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x0000000c (12)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000034 (52)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x0000000d (13)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000002a (42)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x0000000a (10)
+    DMEM loaded (14 words)
+
+[4] Release ARM and start
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000008 (8)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000000 (0)
+    waiting for arm_done...
+Found net device: nf2c0
+    arm_done (POINTERS=0x00000003)
+
+[4b] ARM execution verified via arm_done flag
+  PASS  arm_done asserted — ARM add-1 loop completed
+
+[5] Program GPU IMEM from gpu_imem.mem  (Lab 10: runtime kernel load)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x04400000 (71303168)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x0c800000 (209715200)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000008 (8)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x14c00000 (348127232)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x0000000c (12)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x15000008 (352321544)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000010 (16)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x8548d000 (2236141568)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x11440000 (289669120)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000044 (68)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000004 (4)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000000 (0)
+    GPU IMEM loaded (6 instructions)
+
+[6] Load GPU operands into Dual-BRAM (Feature BRAM & Weight BRAM)
+    Feature BRAM: VecA=4x2.0 (0x4000)
+    Weight BRAM : VecB=4x1.5 (0x3FC0) and VecC=4x0.5 (0x3F00)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000001 (1)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x02000108 (33554696):   0x40004000 (1073758208)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x40004000 (1073758208)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000054 (84)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000400 (1024)
+Found net device: nf2c0
+Write: Reg 0x02000108 (33554696):   0x3fc03fc0 (1069563840)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x3fc03fc0 (1069563840)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000054 (84)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000404 (1028)
+Found net device: nf2c0
+Write: Reg 0x02000108 (33554696):   0x3f003f00 (1056980736)
+Found net device: nf2c0
+Write: Reg 0x0200010c (33554700):   0x3f003f00 (1056980736)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000054 (84)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000014 (20)
+Found net device: nf2c0
+Write: Reg 0x02000114 (33554708):   0x00000000 (0)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000000 (0)
+
+[6.5] Verify Dual-BRAM Loading (Feature & Weight)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000001 (1)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Found net device: nf2c0
+Found net device: nf2c0
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000400 (1024)
+Found net device: nf2c0
+Found net device: nf2c0
+Found net device: nf2c0
+  Feature BRAM [0]: Got 0x40004000 0x40004000
+  Weight BRAM  [0]: Got 0x3fc03fc0 0x3fc03fc0
+  PASS  Dual-BRAM verify
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000000 (0)
+
+[7] Start GPU and verify BFloat16 FMA
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000011 (17)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000001 (1)
+    waiting for gpu_done...
+Found net device: nf2c0
+    gpu_done (POINTERS=0x00000007)
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000001 (1)
+Found net device: nf2c0
+Write: Reg 0x02000104 (33554692):   0x00000000 (0)
+Found net device: nf2c0
+Found net device: nf2c0
+Found net device: nf2c0
+Found net device: nf2c0
+Write: Reg 0x02000100 (33554688):   0x00000000 (0)
+  PASS  GPU BF_MAC result (4 x 3.5)
+
+================================================================
+  Results:  PASS=2   FAIL=0
+================================================================
+  ALL TESTS PASSED
+
