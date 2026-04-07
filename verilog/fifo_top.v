@@ -1,33 +1,8 @@
 `timescale 1ns/1ps
 ///////////////////////////////////////////////////////////////////////////////
-// fifo_top.v — Network Processor Integration
+// fifo_top.v — Network Processor Integration (Dual BRAM)
 //
 // Register map matches ids.xml exactly: 6 SW + 5 HW registers.
-// The NetFPGA build system generates macros from ids.xml:
-//   `FIFO_BLOCK_ADDR       — base address tag for generic_regs
-//   `FIFO_REG_ADDR_WIDTH   — address bits (log2(blocksize/4) = log2(64) = 6)
-//
-// ─────────────────────────────────────────────────────────────────────
-// SW registers (host writes):
-//   offset 0x00  cmd          [1:0]=mode [2]=fifo_rst [3]=arm_start
-//                             [4]=gpu_start [5]=gpu2_start
-//   offset 0x04  proc_addr    byte address for BRAM/IMEM/DMEM access
-//   offset 0x08  wdata_hi     data[63:32] for FIFO BRAM writes
-//   offset 0x0c  wdata_lo     data[31:0]  also used as 32-bit prog word
-//   offset 0x10  wdata_ctrl   ctrl[7:0] + host_we trigger
-//   offset 0x14  rdata_sel    [0]=bram/gpu2  [1]=arm_prog_en
-//                             [2]=gpu_prog_en [3]=arm_dmem_sel
-//                             [4]=gpu_dmem_sel [5]=arm_prog_we (edge)
-//                             [6]=gpu_prog_we  (edge)
-//
-// HW registers (host reads):
-//   offset 0x18  status       [1:0]=mode [2]=pkt_ready [15:8]=pkt_len
-//   offset 0x1c  rdata_hi     FIFO BRAM data[63:32] at proc_addr
-//   offset 0x20  rdata_lo     FIFO BRAM data[31:0]
-//   offset 0x24  rdata_ctrl   {24'b0, ctrl[7:0]}
-//   offset 0x28  pointers     [0]=arm_done [1]=arm_run [2]=gpu_done
-//                             [3]=gpu_run  [4]=gpu2_done [5]=gpu2_run
-//                             [15:8]=tail  [23:16]=head
 ///////////////////////////////////////////////////////////////////////////////
 
 module fifo_top
@@ -41,81 +16,60 @@ module fifo_top
       input  [CTRL_WIDTH-1:0]             in_ctrl,
       input                               in_wr,
       output                              in_rdy,
-
       output [DATA_WIDTH-1:0]             out_data,
       output [CTRL_WIDTH-1:0]             out_ctrl,
       output                              out_wr,
       input                               out_rdy,
-
       input                               reg_req_in,
       input                               reg_ack_in,
       input                               reg_rd_wr_L_in,
       input  [`UDP_REG_ADDR_WIDTH-1:0]    reg_addr_in,
       input  [`CPCI_NF2_DATA_WIDTH-1:0]   reg_data_in,
       input  [UDP_REG_SRC_WIDTH-1:0]      reg_src_in,
-
       output                              reg_req_out,
       output                              reg_ack_out,
       output                              reg_rd_wr_L_out,
       output [`UDP_REG_ADDR_WIDTH-1:0]    reg_addr_out,
       output [`CPCI_NF2_DATA_WIDTH-1:0]   reg_data_out,
       output [UDP_REG_SRC_WIDTH-1:0]      reg_src_out,
-
       input                               reset,
       input                               clk
    );
 
-   // ==================================================================
    // SW Registers (names match ids.xml register names)
-   // ==================================================================
-   wire [31:0] sw_cmd;
-   wire [31:0] sw_proc_addr;
-   wire [31:0] sw_wdata_hi;
-   wire [31:0] sw_wdata_lo;
-   wire [31:0] sw_wdata_ctrl;
-   wire [31:0] sw_rdata_sel;
+   wire [31:0] sw_cmd, sw_proc_addr, sw_wdata_hi, sw_wdata_lo, sw_wdata_ctrl, sw_rdata_sel;
 
-   // ── cmd fields ─────────────────────────────────────────────────
+   // cmd fields
    wire [1:0] fifo_mode = sw_cmd[1:0];
    wire       cmd_reset = sw_cmd[2];
 
-   // ── rdata_sel fields ───────────────────────────────────────────
+   // rdata_sel fields
    wire arm_prog_en  = sw_rdata_sel[1];
    wire gpu_prog_en  = sw_rdata_sel[2];
    wire arm_dmem_sel = sw_rdata_sel[3];
    wire gpu_dmem_sel = sw_rdata_sel[4];
 
-   // ==================================================================
-   // Edge detection — start pulses (cmd[3:5]) and prog_we (rdata_sel[5:6])
-   // ==================================================================
-   reg cmd3_prev, cmd4_prev, cmd5_prev;
-   reg rsel5_prev, rsel6_prev;
-
-   wire arm_start  = sw_cmd[3]        & ~cmd3_prev;
-   wire gpu_start  = sw_cmd[4]        & ~cmd4_prev;
-   wire gpu2_start = sw_cmd[5]        & ~cmd5_prev;
+   // Edge detection — start pulses
+   reg cmd3_prev, cmd4_prev, cmd5_prev, rsel5_prev, rsel6_prev;
+   wire arm_start   = sw_cmd[3]       & ~cmd3_prev;
+   wire gpu_start   = sw_cmd[4]       & ~cmd4_prev;
+   wire gpu2_start  = sw_cmd[5]       & ~cmd5_prev;
    wire arm_prog_we = sw_rdata_sel[5] & ~rsel5_prev;
    wire gpu_prog_we = sw_rdata_sel[6] & ~rsel6_prev;
 
    always @(posedge clk) begin
       if (reset) begin
-         cmd3_prev  <= 1'b0; cmd4_prev  <= 1'b0; cmd5_prev  <= 1'b0;
+         cmd3_prev <= 1'b0; cmd4_prev <= 1'b0; cmd5_prev <= 1'b0;
          rsel5_prev <= 1'b0; rsel6_prev <= 1'b0;
       end else begin
-         cmd3_prev  <= sw_cmd[3];        cmd4_prev  <= sw_cmd[4];
-         cmd5_prev  <= sw_cmd[5];
-         rsel5_prev <= sw_rdata_sel[5];  rsel6_prev <= sw_rdata_sel[6];
+         cmd3_prev <= sw_cmd[3];       cmd4_prev <= sw_cmd[4];       cmd5_prev <= sw_cmd[5];
+         rsel5_prev <= sw_rdata_sel[5]; rsel6_prev <= sw_rdata_sel[6];
       end
    end
 
-   // ==================================================================
-   // ARM CPU — PCI-style programming interface (Lab 6 pattern)
-   // Prog data path: proc_addr = byte addr, wdata_lo = 32-bit word
-   // ==================================================================
-   wire        arm_done;
-   wire        arm_running;
+   // ─── ARM CPU ──────────────────────────────────────────────────────────
+   wire        arm_done, arm_running;
    wire [31:0] arm_dmem_rdata;
-
    arm_cpu_wrapper arm_inst (
       .clk         (clk),
       .rst_n       (~reset),
@@ -129,15 +83,11 @@ module fifo_top
       .cpu_running (arm_running)
    );
 
-   // ==================================================================
-   // GPU — BFloat16 tensor core, PCI-style programming interface
-   // ==================================================================
-   wire        gpu_done;
-   wire        gpu_running;
-   wire [71:0] proc_rdata;   // shared FIFO BRAM Port B output
-
-   wire [7:0]  gpu_bram_addr;
+   // ─── GPU TENSOR CORE ──────────────────────────────────────────────────
+   wire        gpu_done, gpu_running;
+   wire [7:0]  gpu_bram_addr, gpu_weight_addr;
    wire [71:0] gpu_bram_wdata;
+   wire [71:0] proc_rdata, weight_rdata_out;
    wire        gpu_bram_we;
 
    gpu_net gpu_inst (
@@ -151,75 +101,51 @@ module fifo_top
       .gpu_dmem_sel   (gpu_dmem_sel),
       .gpu_prog_addr  (sw_proc_addr),
       .gpu_prog_wdata (sw_wdata_lo),
+      
       .bram_addr      (gpu_bram_addr),
       .bram_wdata     (gpu_bram_wdata),
       .bram_rdata     (proc_rdata),
-      .bram_we        (gpu_bram_we)
+      .bram_we        (gpu_bram_we),
+      
+      .weight_addr    (gpu_weight_addr),
+      .weight_rdata   (weight_rdata_out)
    );
 
-   // ==================================================================
-   // GPU2 / Simple CPU placeholder (ids.xml bit [4:5] of pointers)
-   // Tie off until GPU2 is connected.
-   // ==================================================================
    wire gpu2_done    = 1'b0;
    wire gpu2_running = 1'b0;
-   // gpu2_start decoded above; connect to GPU2 when ready.
 
-   // ==================================================================
-   // Host FIFO BRAM write trigger — edge on sw_wdata_ctrl
-   // Active only in PROC mode and when no processor is running.
-   // ==================================================================
+   // ─── HOST ADDRESS DECODER & WRITE LOGIC ───────────────────────────────
    reg [31:0] sw_wdata_ctrl_prev;
-   wire host_we = (sw_wdata_ctrl != sw_wdata_ctrl_prev)
-               && (fifo_mode == 2'b01)
-               && !arm_running && !gpu_running;
-
    always @(posedge clk) begin
       if (reset) sw_wdata_ctrl_prev <= 32'b0;
       else       sw_wdata_ctrl_prev <= sw_wdata_ctrl;
    end
 
-   // ==================================================================
-   // GPU BRAM programming path (gpu_prog_we & gpu_dmem_sel=1)
-   // Allows 72-bit pre-loading of GPU operands into shared BRAM
-   // via proc_addr + wdata_hi + wdata_lo + wdata_ctrl.
-   // ==================================================================
-   wire        gpu_bram_prog_we   = gpu_prog_we & gpu_dmem_sel;
+   // Bit 10 determines memory target: 0 = Feature BRAM, 1 = Weight BRAM
+   wire sel_weight_bram = sw_proc_addr[10];
+
+   // Host writes (PROC mode, no CPU/GPU running)
+   wire host_we = (sw_wdata_ctrl != sw_wdata_ctrl_prev) && (fifo_mode == 2'b01) && !arm_running && !gpu_running;
+   
+   // GPU pre-load programming path
+   wire gpu_bram_prog_we   = gpu_prog_we & gpu_dmem_sel;
    wire [7:0]  gpu_bram_prog_addr = sw_proc_addr[9:2];
-   wire [71:0] gpu_bram_prog_data = {sw_wdata_ctrl[7:0],
-                                      sw_wdata_hi,
-                                      sw_wdata_lo};
+   wire [71:0] host_wdata = {sw_wdata_ctrl[7:0], sw_wdata_hi, sw_wdata_lo};
 
-   // ==================================================================
-   // BRAM Port B MUX
-   // Priority: GPU runtime > GPU BRAM prog > host PROC write
-   // ==================================================================
-   wire [7:0]  mux_addr;
-   wire [71:0] mux_wdata;
-   wire        mux_we;
+   // Write enables split by address decoder
+   wire prog_we_feature = gpu_bram_prog_we & ~sel_weight_bram;
+   wire prog_we_weight  = gpu_bram_prog_we &  sel_weight_bram;
+   wire host_we_feature = host_we          & ~sel_weight_bram;
+   wire host_we_weight  = host_we          &  sel_weight_bram;
 
-   assign mux_addr  = gpu_running      ? gpu_bram_addr       :
-                      gpu_bram_prog_we ? gpu_bram_prog_addr   :
-                                         sw_proc_addr[7:0];
+   // ─── FEATURE BRAM MUX (convertible_fifo) ──────────────────────────────
+   wire [7:0]  mux_addr  = gpu_running ? gpu_bram_addr  : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[7:0]);
+   wire [71:0] mux_wdata = gpu_running ? gpu_bram_wdata : host_wdata;
+   wire        mux_we    = gpu_running ? gpu_bram_we    : (gpu_bram_prog_we ? prog_we_feature    : host_we_feature);
 
-   assign mux_wdata = gpu_running      ? gpu_bram_wdata       :
-                      gpu_bram_prog_we ? gpu_bram_prog_data    :
-                      {sw_wdata_ctrl[7:0], sw_wdata_hi, sw_wdata_lo};
-
-   assign mux_we    = gpu_running      ? gpu_bram_we          :
-                      gpu_bram_prog_we ? 1'b1                  :
-                                         host_we;
-
-   // ==================================================================
-   // Convertible FIFO instance
-   // ==================================================================
-   wire        pkt_ready;
-   wire [7:0]  pkt_len;
-   wire [7:0]  head_addr, tail_addr;
+   wire        pkt_ready, fifo_out_wr, fifo_in_rdy;
+   wire [7:0]  pkt_len, head_addr, tail_addr, fifo_out_ctrl;
    wire [63:0] fifo_out_data;
-   wire [7:0]  fifo_out_ctrl;
-   wire        fifo_out_wr;
-   wire        fifo_in_rdy;
 
    convertible_fifo fifo_inst (
       .clk          (clk),
@@ -232,10 +158,12 @@ module fifo_top
       .net_out_ctrl (fifo_out_ctrl),
       .net_out_wr   (fifo_out_wr),
       .net_out_rdy  (out_rdy),
+      
       .proc_addr    (mux_addr),
       .proc_wdata   (mux_wdata),
       .proc_rdata   (proc_rdata),
       .proc_we      (mux_we),
+      
       .mode         (fifo_mode),
       .cmd_send     (1'b0),
       .cmd_reset    (cmd_reset),
@@ -245,52 +173,41 @@ module fifo_top
       .tail_addr    (tail_addr)
    );
 
-   // ==================================================================
-   // Passthrough MUX
-   // ==================================================================
-   assign out_data = (fifo_mode == 2'b00) ? in_data     : fifo_out_data;
-   assign out_ctrl = (fifo_mode == 2'b00) ? in_ctrl     : fifo_out_ctrl;
-   assign out_wr   = (fifo_mode == 2'b00) ? in_wr       : fifo_out_wr;
-   assign in_rdy   = (fifo_mode == 2'b00) ? out_rdy     :
-                     (fifo_mode == 2'b11) ? fifo_in_rdy : 1'b0;
+   // ─── WEIGHT BRAM MUX & INSTANCE ───────────────────────────────────────
+   wire [7:0] weight_mux_addr = gpu_running ? gpu_weight_addr : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[7:0]);
+   // GPU only READS from the weight BRAM, it never writes.
+   wire       weight_mux_we   = gpu_running ? 1'b0 : (gpu_bram_prog_we ? prog_we_weight : host_we_weight);
 
-   // ==================================================================
-   // HW Registers (names match ids.xml register names)
-   // ==================================================================
-   wire [31:0] hw_status    = {16'b0, pkt_len, 5'b0, pkt_ready, fifo_mode};
-   wire [31:0] hw_rdata_hi  = proc_rdata[63:32];
-   wire [31:0] hw_rdata_lo  = proc_rdata[31:0];
-   wire [31:0] hw_rdata_ctrl = {24'b0, proc_rdata[71:64]};
-   wire [31:0] hw_pointers  = {8'b0,
-                                head_addr,     // [23:16]
-                                tail_addr,     // [15:8]
-                                2'b0,
-                                gpu2_running,  // [5]
-                                gpu2_done,     // [4]
-                                gpu_running,   // [3]
-                                gpu_done,      // [2]
-                                arm_running,   // [1]
-                                arm_done};     // [0]
+   weight_bram w_bram (
+      .clk     (clk),
+      // Port A (GPU Runtime)
+      .addr_a  (gpu_weight_addr),
+      .rdata_a (weight_rdata_out),
+      // Port B (Host / GPU Prog MUX)
+      .we_b    (weight_mux_we),
+      .addr_b  (weight_mux_addr),
+      .wdata_b (host_wdata),
+      .rdata_b (weight_rdata_b) // Requires declaring `wire [71:0] weight_rdata_b;`
+   );
+   wire [71:0] weight_rdata_b;
 
-   // ==================================================================
-   // generic_regs: 6 SW + 5 HW  (matches ids.xml exactly)
-   //
-   // generic_regs packs the arrays with reg0 in the LOWEST bits:
-   //   software_regs[31:0]    = sw_cmd       (reg 0, offset 0x00)
-   //   software_regs[63:32]   = sw_proc_addr (reg 1, offset 0x04)
-   //   software_regs[95:64]   = sw_wdata_hi  (reg 2, offset 0x08)
-   //   software_regs[127:96]  = sw_wdata_lo  (reg 3, offset 0x0c)
-   //   software_regs[159:128] = sw_wdata_ctrl(reg 4, offset 0x10)
-   //   software_regs[191:160] = sw_rdata_sel (reg 5, offset 0x14)
-   //
-   //   hardware_regs[31:0]    = hw_status    (reg 0, offset 0x18)
-   //   hardware_regs[63:32]   = hw_rdata_hi  (reg 1, offset 0x1c)
-   //   hardware_regs[95:64]   = hw_rdata_lo  (reg 2, offset 0x20)
-   //   hardware_regs[127:96]  = hw_rdata_ctrl(reg 3, offset 0x24)
-   //   hardware_regs[159:128] = hw_pointers  (reg 4, offset 0x28)
-   // ==================================================================
-   generic_regs
-   #(
+   // ─── READBACK ROUTING & STATUS ────────────────────────────────────────
+   // Host readback MUX: Return feature BRAM or weight BRAM depending on Bit 10
+   wire [71:0] active_host_rdata = sel_weight_bram ? weight_rdata_b : proc_rdata;
+
+   assign out_data = (fifo_mode == 2'b00) ? in_data : fifo_out_data;
+   assign out_ctrl = (fifo_mode == 2'b00) ? in_ctrl : fifo_out_ctrl;
+   assign out_wr   = (fifo_mode == 2'b00) ? in_wr   : fifo_out_wr;
+   assign in_rdy   = (fifo_mode == 2'b00) ? out_rdy : (fifo_mode == 2'b11) ? fifo_in_rdy : 1'b0;
+
+   wire [31:0] hw_status     = {16'b0, pkt_len, 5'b0, pkt_ready, fifo_mode};
+   wire [31:0] hw_rdata_hi   = active_host_rdata[63:32];
+   wire [31:0] hw_rdata_lo   = active_host_rdata[31:0];
+   wire [31:0] hw_rdata_ctrl = {24'b0, active_host_rdata[71:64]};
+   wire [31:0] hw_pointers   = {8'b0, head_addr, tail_addr, 2'b0, gpu2_running, gpu2_done, gpu_running, gpu_done, arm_running, arm_done};
+
+   // ─── REGISTER SYSTEM (ids.xml) ────────────────────────────────────────
+   generic_regs #(
       .UDP_REG_SRC_WIDTH   (UDP_REG_SRC_WIDTH),
       .TAG                 (`FIFO_BLOCK_ADDR),
       .REG_ADDR_WIDTH      (`FIFO_REG_ADDR_WIDTH),
@@ -312,21 +229,8 @@ module fifo_top
       .reg_src_out      (reg_src_out),
       .counter_updates  (),
       .counter_decrement(),
-      
-      // Software interface
-      .software_regs ({sw_rdata_sel,
-                       sw_wdata_ctrl,
-                       sw_wdata_lo,
-                       sw_wdata_hi,
-                       sw_proc_addr,
-                       sw_cmd}),
-
-      // Hardware interface
-      .hardware_regs ({hw_pointers,
-                       hw_rdata_ctrl,
-                       hw_rdata_lo,
-                       hw_rdata_hi,
-                       hw_status}),
+      .software_regs ({sw_rdata_sel, sw_wdata_ctrl, sw_wdata_lo, sw_wdata_hi, sw_proc_addr, sw_cmd}),
+      .hardware_regs ({hw_pointers, hw_rdata_ctrl, hw_rdata_lo, hw_rdata_hi, hw_status}),
       .clk   (clk),
       .reset (reset)
    );

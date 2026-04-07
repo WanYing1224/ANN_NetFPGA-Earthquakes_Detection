@@ -6,23 +6,27 @@ module gpu_net (
     input  wire        clk,
     input  wire        rst_n,
 
-    // Control (unchanged)
+    // Control
     input  wire        start,
     output wire        done,
     output wire        running,
 
-    // Programming interface (NEW — from fifo_top SW regs)
+    // Programming interface
     input  wire        gpu_prog_en,
     input  wire        gpu_prog_we,
     input  wire        gpu_dmem_sel,
     input  wire [31:0] gpu_prog_addr,
     input  wire [31:0] gpu_prog_wdata,
 
-    // Shared BRAM interface (unchanged)
+    // Shared Feature BRAM interface
     output wire [7:0]  bram_addr,
     output wire [71:0] bram_wdata,
     input  wire [71:0] bram_rdata,
-    output wire        bram_we
+    output wire        bram_we,
+
+    // Shared Weight BRAM interface (NEW)
+    output wire [7:0]  weight_addr,
+    input  wire [71:0] weight_rdata
 );
     wire rst = ~rst_n;
 
@@ -32,17 +36,22 @@ module gpu_net (
         .start          (start),
         .done           (done),
         .running        (running),
+        
         // Programming interface
         .gpu_prog_en    (gpu_prog_en),
         .gpu_prog_we    (gpu_prog_we),
         .gpu_dmem_sel   (gpu_dmem_sel),
         .gpu_prog_addr  (gpu_prog_addr),
         .gpu_prog_wdata (gpu_prog_wdata),
-        // Shared BRAM
+        
+        // Shared Feature BRAM
         .bram_addr      (bram_addr),
         .bram_wdata     (bram_wdata),
         .bram_we        (bram_we),
-        .bram_rdata     (bram_rdata)
-    );
+        .bram_rdata     (bram_rdata),
 
+        // Shared Weight BRAM (NEW)
+        .weight_addr    (weight_addr),
+        .weight_rdata   (weight_rdata)
+    );
 endmodule

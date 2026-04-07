@@ -34,6 +34,7 @@
 `define OP_RELU      6'b100010 // Rd <- max(0, Rs1)
 `define OP_TF_START  6'b100011 // Triggers complex Tensor Unit pipeline
 `define OP_TF_WAIT   6'b100100 // Stalls PC/Pipeline until Tensor Unit ready signal is high
+`define OP_LDW64     6'b000101 // Rd <- WeightBRAM[Rs_base + Imm] (Dual-channel load)
 
 // Branching
 `define OP_BRANCH    6'b110000 // PC <- PC + Imm (Evaluates Flags set by CMP)

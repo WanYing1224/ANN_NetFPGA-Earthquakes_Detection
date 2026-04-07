@@ -1,32 +1,13 @@
 `timescale 1ns/1ps
 // ============================================================
-// gpu_core_min.v — Minimal Programmable GPU Core (Lab 8)
-//
-// Bug fix [FIX 7]: IMEM synchronous BRAM read latency.
-//   The original S_FETCH latched instr_from_mem on the same
-//   cycle the address was presented — one cycle too early.
-//   This caused every instruction to execute with the PREVIOUS
-//   instruction's encoding, making the kernel compute garbage
-//   and gpu_done fire before ST64 completed.
-//
-//   Fix: split fetch into two states:
-//     S_FETCH      — present pc address to BRAM Port A
-//     S_FETCH_WAIT — BRAM output now valid; latch instr_reg
-//   Then proceed to S_DECODE as before.
-//
-// All other fixes preserved:
-//   [FIX 1] ISA fields 4-bit per isa_defines.vh
-//   [FIX 2] PC managed internally, advances only after WB
-//   [FIX 3] ST64 uses Rd (4th regfile read port) as store source
-//   [FIX 4] BRANCH unified to word-index semantics
-//   [FIX 5] cmp_flag register set by OP_CMP_I16
-//   [FIX 6] gpu_ldst instantiated for LD/ST
+// gpu_core_min.v — Minimal Programmable GPU Core
 // ============================================================
 `include "isa_defines.vh"
 
 module gpu_core_min (
     input  wire        clk,
     input  wire        rst,
+    
     input  wire        start,
     output reg         done,
     output reg         running,
@@ -42,8 +23,13 @@ module gpu_core_min (
     output wire [7:0]  bram_addr,
     output wire [71:0] bram_wdata,
     output wire        bram_we,
-    input  wire [71:0] bram_rdata
+    input  wire [71:0] bram_rdata,
+    
+    // Shared Weight BRAM interface (NEW)
+    output wire [7:0]  weight_addr,
+    input  wire [71:0] weight_rdata
 );
+
     // ── Programming mode reset ────────────────────────────────────
     wire core_rst = rst | gpu_prog_en;
 
@@ -151,7 +137,7 @@ module gpu_core_min (
                                         (a1>0?a1:16'd0),(a0>0?a0:16'd0)};
             `OP_LDI:      alu_result = imm_sext;
             `OP_READ_TID: alu_result = 64'd0;
-            `OP_LD64:     alu_result = rs1_data + imm_sext;
+            `OP_LD64, `OP_LDW64: alu_result = rs1_data + imm_sext; // ADDED LDW64
             `OP_ST64:     alu_result = rs1_data + imm_sext;
             default:      alu_result = 64'd0;
         endcase
@@ -162,11 +148,16 @@ module gpu_core_min (
 
     // ── LD/ST Unit ────────────────────────────────────────────────
     reg  [31:0] ldst_byte_addr;
+    reg  [31:0] ldw_byte_addr; // NEW
     reg  [63:0] ldst_st_data;
     reg         ldst_st_en;
 
     wire [7:0]  ld_bram_addr;
     wire [63:0] ld_data;
+    
+    wire [7:0]  rd_weight_addr; // NEW
+    wire [63:0] ldw_data;       // NEW
+
     wire [7:0]  st_bram_addr;
     wire [71:0] st_bram_wdata;
     wire        st_bram_we;
@@ -176,6 +167,12 @@ module gpu_core_min (
         .rd_bram_addr  (ld_bram_addr),
         .bram_rdata    (bram_rdata),
         .ld_data       (ld_data),
+        
+        .ldw_byte_addr (ldw_byte_addr),   // NEW
+        .rd_weight_addr(rd_weight_addr),  // NEW
+        .weight_rdata  (weight_rdata),    // NEW
+        .ldw_data      (ldw_data),        // NEW
+
         .st_byte_addr  (ldst_byte_addr),
         .st_data       (ldst_st_data),
         .wr_bram_addr  (st_bram_addr),
@@ -184,9 +181,10 @@ module gpu_core_min (
         .st_en         (ldst_st_en)
     );
 
-    assign bram_addr  = ldst_st_en ? st_bram_addr  : ld_bram_addr;
-    assign bram_wdata = st_bram_wdata;
-    assign bram_we    = st_bram_we;
+    assign bram_addr   = ldst_st_en ? st_bram_addr  : ld_bram_addr;
+    assign bram_wdata  = st_bram_wdata;
+    assign bram_we     = st_bram_we;
+    assign weight_addr = rd_weight_addr; // NEW
 
     // ── Intermediate result register ──────────────────────────────
     reg [63:0] exec_result;
@@ -201,6 +199,7 @@ module gpu_core_min (
             instr_reg      <= 32'd0;
             exec_result    <= 64'd0;
             ldst_byte_addr <= 32'd0;
+            ldw_byte_addr  <= 32'd0; // NEW
             ldst_st_data   <= 64'd0;
             ldst_st_en     <= 1'b0;
             rf_we          <= 1'b0;
@@ -263,6 +262,10 @@ module gpu_core_min (
                             ldst_byte_addr <= alu_result[31:0];
                             state          <= S_MEM;
                         end
+                        `OP_LDW64: begin // NEW
+                            ldw_byte_addr <= alu_result[31:0];
+                            state         <= S_MEM;
+                        end
                         `OP_ST64: begin
                             ldst_byte_addr <= alu_result[31:0];
                             ldst_st_data   <= rd_src_data;
@@ -310,7 +313,8 @@ module gpu_core_min (
 
                 // ── MEM2: capture BRAM LD data ────────────────────
                 S_MEM2: begin
-                    exec_result <= ld_data;
+                    // Assign from appropriate memory interface
+                    exec_result <= (opcode == `OP_LDW64) ? ldw_data : ld_data; 
                     state       <= S_WB;
                 end
 
