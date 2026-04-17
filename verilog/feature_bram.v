@@ -19,7 +19,7 @@ module feature_bram (
     output reg  [71:0] dout_b
 );
     (* RAM_STYLE = "BLOCK" *)
-    reg [71:0] ram [0:255];
+    reg [71:0] ram [0:11549];
 
     // Port A: Synchronous Read/Write
     always @(posedge clk) begin
