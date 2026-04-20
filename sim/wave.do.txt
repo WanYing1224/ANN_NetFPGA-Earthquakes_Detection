@@ -2,37 +2,47 @@ onerror {resume}
 quietly WaveActivateNextPane {} 0
 
 add wave -noupdate -divider {System Controls}
-add wave -noupdate -radix binary /integration_tb/clk
-add wave -noupdate -radix binary /integration_tb/rst_n
+add wave -noupdate -radix binary /integration2_tb/clk
+add wave -noupdate -radix binary /integration2_tb/rst_n
 
-add wave -noupdate -divider {Host Address Decoder}
-add wave -noupdate -radix hexadecimal /integration_tb/host_byte_addr
-add wave -noupdate -radix binary /integration_tb/sel_weight
-add wave -noupdate -radix binary /integration_tb/host_we
-add wave -noupdate -radix hexadecimal /integration_tb/host_wdata
-add wave -noupdate -radix hexadecimal /integration_tb/host_rdata
+add wave -noupdate -divider {Host Processor Bus (Verification)}
+add wave -noupdate -radix hexadecimal /integration2_tb/sw_proc_addr
+add wave -noupdate -radix binary /integration2_tb/sw_reg_prog_we
+add wave -noupdate -radix hexadecimal /integration2_tb/sw_reg_wdata_hi
+add wave -noupdate -radix hexadecimal /integration2_tb/sw_reg_wdata_lo
+add wave -noupdate -radix hexadecimal /integration2_tb/host_mux_dout
 
-add wave -noupdate -divider {Feature BRAM MUX (Base 0x000)}
-add wave -noupdate -radix binary /integration_tb/mux_we_feature
-add wave -noupdate -radix hexadecimal /integration_tb/mux_addr_feature
-add wave -noupdate -radix hexadecimal /integration_tb/mux_wdata_feature
-add wave -noupdate -radix hexadecimal /integration_tb/feature_rdata
+add wave -noupdate -divider {ARM CPU State}
+add wave -position 10  sim:/integration2_tb/arm_dut/pc_t0
+add wave -position 11  sim:/integration2_tb/arm_dut/pc_t1
+add wave -position 12  sim:/integration2_tb/arm_dut/pc_t2
+add wave -position 13  sim:/integration2_tb/arm_dut/pc_t3
+add wave -noupdate -radix binary /integration2_tb/arm_cpu_running
+add wave -noupdate -radix binary /integration2_tb/arm_cpu_done
 
-add wave -noupdate -divider {Weight BRAM MUX (Base 0x400)}
-add wave -noupdate -radix binary /integration_tb/mux_we_weight
-add wave -noupdate -radix hexadecimal /integration_tb/mux_addr_weight
-add wave -noupdate -radix hexadecimal /integration_tb/weight_rdata_b
+add wave -noupdate -divider {GPU Fetching Phase (Inputs)}
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_feat_addr
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_feat_rdata
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_weight_addr
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_weight_rdata
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_bias_addr
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_bias_rdata
 
-add wave -noupdate -divider {GPU Execution & Memory}
-add wave -noupdate -radix binary /integration_tb/gpu_start_r
-add wave -noupdate -radix binary /integration_tb/gpu_running
-add wave -noupdate -radix binary /integration_tb/gpu_done
-add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_addr
-add wave -noupdate -radix binary /integration_tb/gpu_bram_we
-add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_wdata
-add wave -noupdate -radix hexadecimal /integration_tb/gpu_bram_rdata
-add wave -noupdate -radix hexadecimal /integration_tb/gpu_weight_addr
-add wave -noupdate -radix hexadecimal /integration_tb/gpu_weight_rdata
+add wave -noupdate -divider {GPU Store Phase (ST64 Results)}
+add wave -noupdate -radix binary /integration2_tb/gpu_we
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_waddr
+add wave -noupdate -radix hexadecimal /integration2_tb/gpu_wdata
+
+add wave -noupdate -divider {Convertible FIFO (Memory Multiplexer)}
+add wave -noupdate -radix binary /integration2_tb/fifo_we
+add wave -noupdate -radix hexadecimal /integration2_tb/fifo_addr
+add wave -noupdate -radix hexadecimal /integration2_tb/fifo_wdata
+add wave -noupdate -radix hexadecimal /integration2_tb/feat_rdata_b
+
+add wave -noupdate -divider {Three BRAM Value}
+add wave -position end  sim:/integration2_tb/fifo_mem/shared_mem/ram
+add wave -position end  sim:/integration2_tb/weight_mem/ram
+add wave -position end  sim:/integration2_tb/layer_biases/rom_array
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
@@ -50,4 +60,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {1000 ns}
+WaveRestoreZoom {0 ps} {2000 ns}
