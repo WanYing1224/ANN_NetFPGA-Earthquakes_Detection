@@ -332,9 +332,13 @@ module gpu_core_min (
                 S_DONE: begin
                     done    <= 1'b1;
                     running <= 1'b0;
+                    // Minimal board-side fix:
+                    // a new start pulse should restart immediately from PC=0.
                     if (start) begin
-                        state <= S_IDLE;
-                        done  <= 1'b0;
+                        done    <= 1'b0;
+                        running <= 1'b1;
+                        pc      <= 5'd0;
+                        state   <= S_FETCH;
                     end
                 end
 
