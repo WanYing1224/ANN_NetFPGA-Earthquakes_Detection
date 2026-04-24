@@ -232,7 +232,6 @@ module gpu_core_min (
                     pc      <= 5'd0;
                     if (start) begin
                         state   <= S_FETCH;
-                        pc      <= 5'd0;
                         running <= 1'b1;
                     end
                 end
