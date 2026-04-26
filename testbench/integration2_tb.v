@@ -328,7 +328,7 @@ module integration2_tb;
     // Arrays strictly dimensioned for the exact network shapes
     reg [63:0] raw_dataset [0:11549]; // Phase 0: 28 features (7 lines)
     reg [63:0] l1_dataset  [0:6599];  // Phase 1: 16 features (4 lines)
-    reg [63:0] l2_dataset  [0:3299];  // Phase 2: 8 features (2 lines) <-- FIXED!
+    reg [63:0] l2_dataset  [0:3299];  // Phase 2: 8 features (2 lines)
 
     initial begin
         rst_n = 0;
