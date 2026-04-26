@@ -24,9 +24,13 @@ module gpu_net (
     input  wire [71:0] bram_rdata,
     output wire        bram_we,
 
-    // Shared Weight BRAM interface (NEW)
+    // Shared Weight BRAM interface
     output wire [7:0]  weight_addr,
-    input  wire [71:0] weight_rdata
+    input  wire [71:0] weight_rdata,
+    
+    // Shared Bias BRAM interface
+    output wire [7:0]  bias_addr,
+    input  wire [71:0] bias_rdata
 );
     wire rst = ~rst_n;
 
@@ -44,14 +48,17 @@ module gpu_net (
         .gpu_prog_addr  (gpu_prog_addr),
         .gpu_prog_wdata (gpu_prog_wdata),
         
-        // Shared Feature BRAM
+        // Memory Interfaces
         .bram_addr      (bram_addr),
         .bram_wdata     (bram_wdata),
-        .bram_we        (bram_we),
         .bram_rdata     (bram_rdata),
-
-        // Shared Weight BRAM (NEW)
+        .bram_we        (bram_we),
+        
         .weight_addr    (weight_addr),
-        .weight_rdata   (weight_rdata)
+        .weight_rdata   (weight_rdata),
+        
+        .bias_addr      (bias_addr),
+        .bias_rdata     (bias_rdata)
     );
+
 endmodule

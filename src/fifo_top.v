@@ -1,8 +1,13 @@
 `timescale 1ns/1ps
 ///////////////////////////////////////////////////////////////////////////////
-// fifo_top.v — Network Processor Integration (Dual BRAM)
+// fifo_top.v — Network Processor Integration (Triple BRAM)
 //
 // Register map matches ids.xml exactly: 6 SW + 5 HW registers.
+//
+// Memory Map (host access via sw_proc_addr):
+//   Bits [11:10] = 2'b00  →  Feature BRAM (convertible_fifo)
+//   Bits [11:10] = 2'b01  →  Weight BRAM
+//   Bits [11:10] = 2'b11  →  Bias ROM (read-only, initialized via initial block)
 ///////////////////////////////////////////////////////////////////////////////
 
 module fifo_top
@@ -85,9 +90,9 @@ module fifo_top
 
    // ─── GPU TENSOR CORE ──────────────────────────────────────────────────
    wire        gpu_done, gpu_running;
-   wire [7:0]  gpu_bram_addr, gpu_weight_addr;
+   wire [7:0]  gpu_bram_addr, gpu_weight_addr, gpu_bias_addr;
    wire [71:0] gpu_bram_wdata;
-   wire [71:0] proc_rdata, weight_rdata_out;
+   wire [71:0] proc_rdata, weight_rdata_out, bias_rdata_out;
    wire        gpu_bram_we;
 
    gpu_net gpu_inst (
@@ -101,14 +106,17 @@ module fifo_top
       .gpu_dmem_sel   (gpu_dmem_sel),
       .gpu_prog_addr  (sw_proc_addr),
       .gpu_prog_wdata (sw_wdata_lo),
-      
+
       .bram_addr      (gpu_bram_addr),
       .bram_wdata     (gpu_bram_wdata),
       .bram_rdata     (proc_rdata),
       .bram_we        (gpu_bram_we),
-      
+
       .weight_addr    (gpu_weight_addr),
-      .weight_rdata   (weight_rdata_out)
+      .weight_rdata   (weight_rdata_out),
+
+      .bias_addr      (gpu_bias_addr),
+      .bias_rdata     (bias_rdata_out)
    );
 
    wire gpu2_done    = 1'b0;
@@ -121,25 +129,32 @@ module fifo_top
       else       sw_wdata_ctrl_prev <= sw_wdata_ctrl;
    end
 
-   // Bit 10 determines memory target: 0 = Feature BRAM, 1 = Weight BRAM
-   wire sel_weight_bram = sw_proc_addr[10];
+   // 3-zone address decoder using bits [11:10]:
+   //   2'b00 → Feature BRAM
+   //   2'b01 → Weight BRAM
+   //   2'b11 → Bias ROM (read-only)
+   wire [1:0] mem_zone       = sw_proc_addr[11:10];
+   wire       sel_feature    = (mem_zone == 2'b00);
+   wire       sel_weight     = (mem_zone == 2'b01);
+   wire       sel_bias       = (mem_zone == 2'b11);
 
    // Host writes (PROC mode, no CPU/GPU running)
    wire host_we = (sw_wdata_ctrl != sw_wdata_ctrl_prev) && (fifo_mode == 2'b01) && !arm_running && !gpu_running;
-   
+
    // GPU pre-load programming path
    wire gpu_bram_prog_we   = gpu_prog_we & gpu_dmem_sel;
    wire [7:0]  gpu_bram_prog_addr = sw_proc_addr[9:2];
    wire [71:0] host_wdata = {sw_wdata_ctrl[7:0], sw_wdata_hi, sw_wdata_lo};
 
    // Write enables split by address decoder
-   wire prog_we_feature = gpu_bram_prog_we & ~sel_weight_bram;
-   wire prog_we_weight  = gpu_bram_prog_we &  sel_weight_bram;
-   wire host_we_feature = host_we          & ~sel_weight_bram;
-   wire host_we_weight  = host_we          &  sel_weight_bram;
+   // Note: Bias ROM is read-only, so no bias write enable
+   wire prog_we_feature = gpu_bram_prog_we & sel_feature;
+   wire prog_we_weight  = gpu_bram_prog_we & sel_weight;
+   wire host_we_feature = host_we          & sel_feature;
+   wire host_we_weight  = host_we          & sel_weight;
 
    // ─── FEATURE BRAM MUX (convertible_fifo) ──────────────────────────────
-   wire [7:0]  mux_addr  = gpu_running ? gpu_bram_addr  : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[7:0]);
+   wire [7:0]  mux_addr  = gpu_running ? gpu_bram_addr  : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[9:2]);
    wire [71:0] mux_wdata = gpu_running ? gpu_bram_wdata : host_wdata;
    wire        mux_we    = gpu_running ? gpu_bram_we    : (gpu_bram_prog_we ? prog_we_feature    : host_we_feature);
 
@@ -158,12 +173,12 @@ module fifo_top
       .net_out_ctrl (fifo_out_ctrl),
       .net_out_wr   (fifo_out_wr),
       .net_out_rdy  (out_rdy),
-      
+
       .proc_addr    (mux_addr),
       .proc_wdata   (mux_wdata),
       .proc_rdata   (proc_rdata),
       .proc_we      (mux_we),
-      
+
       .mode         (fifo_mode),
       .cmd_send     (1'b0),
       .cmd_reset    (cmd_reset),
@@ -174,7 +189,7 @@ module fifo_top
    );
 
    // ─── WEIGHT BRAM MUX & INSTANCE ───────────────────────────────────────
-   wire [7:0] weight_mux_addr = gpu_running ? gpu_weight_addr : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[7:0]);
+   wire [7:0] weight_mux_addr = gpu_running ? gpu_weight_addr : (gpu_bram_prog_we ? gpu_bram_prog_addr : sw_proc_addr[9:2]);
    // GPU only READS from the weight BRAM, it never writes.
    wire weight_mux_we = gpu_running ? 1'b0 : (gpu_bram_prog_we ? prog_we_weight : host_we_weight);
    wire [71:0] weight_rdata_b;
@@ -191,9 +206,33 @@ module fifo_top
       .rdata_b (weight_rdata_b)
    );
 
+   // ─── BIAS ROM INSTANCE (NEW) ──────────────────────────────────────────
+   // Bias values are hardcoded in bias_bram.v via initial block.
+   // No host write path — host can only read back for verification.
+   // Port A serves GPU at runtime; Port B serves host readback.
+   wire [71:0] bias_rdata_b;
+
+   bias_bram b_rom (
+      .clk     (clk),
+      // Port A (GPU Runtime)
+      .addr_a  (gpu_bias_addr),
+      .dout_a  (bias_rdata_out),
+      // Port B (Host readback via PCI register interface)
+      .addr_b  (sw_proc_addr[9:2]),
+      .dout_b  (bias_rdata_b)
+   );
+
    // ─── READBACK ROUTING & STATUS ────────────────────────────────────────
-   // Host readback MUX: Return feature BRAM or weight BRAM depending on Bit 10
-   wire [71:0] active_host_rdata = sel_weight_bram ? weight_rdata_b : proc_rdata;
+   // Host readback MUX: route based on address zone [11:10]
+   reg [71:0] active_host_rdata;
+   always @(*) begin
+      case (mem_zone)
+         2'b00:   active_host_rdata = proc_rdata;      // Feature BRAM
+         2'b01:   active_host_rdata = weight_rdata_b;  // Weight BRAM
+         2'b11:   active_host_rdata = bias_rdata_b;    // Bias ROM
+         default: active_host_rdata = 72'h0;
+      endcase
+   end
 
    assign out_data = (fifo_mode == 2'b00) ? in_data : fifo_out_data;
    assign out_ctrl = (fifo_mode == 2'b00) ? in_ctrl : fifo_out_ctrl;

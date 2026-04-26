@@ -25,9 +25,13 @@ module gpu_core_min (
     output wire        bram_we,
     input  wire [71:0] bram_rdata,
     
-    // Shared Weight BRAM interface (NEW)
+    // Shared Weight BRAM interface
     output wire [7:0]  weight_addr,
-    input  wire [71:0] weight_rdata
+    input  wire [71:0] weight_rdata,
+
+    // Shared Bias ROM interface (NEW)
+    output wire [7:0]  bias_addr,
+    input  wire [71:0] bias_rdata
 );
 
     // ── Programming mode reset ────────────────────────────────────
@@ -41,7 +45,7 @@ module gpu_core_min (
     // ── FSM states ────────────────────────────────────────────────
     localparam S_IDLE       = 4'd0;
     localparam S_FETCH      = 4'd1;   // present pc to BRAM
-    localparam S_FETCH_WAIT = 4'd2;   // [FIX 7] wait one cycle for BRAM output
+    localparam S_FETCH_WAIT = 4'd2;   // wait one cycle for BRAM output
     localparam S_DECODE     = 4'd3;   // latch instruction, read regfile
     localparam S_EXEC       = 4'd4;
     localparam S_MEM        = 4'd5;
@@ -50,7 +54,7 @@ module gpu_core_min (
     localparam S_DONE       = 4'd8;
 
     reg [3:0] state;
-    parameter PROG_LEN = 6;
+    parameter PROG_LEN = 17; // Increased by 1 for the LDB64 instruction
 
     // ── PC ────────────────────────────────────────────────────────
     reg [4:0] pc;
@@ -69,12 +73,13 @@ module gpu_core_min (
         .dinb  (imem_dinb)
     );
 
-    // ── ISA field decode ──────────────────────────────────────────
+    // ── ISA field decode ──────────────────────
     wire [5:0]  opcode   = instr_reg[31:26];
     wire [3:0]  rd_4b    = instr_reg[25:22];
     wire [3:0]  rs1_4b   = instr_reg[21:18];
     wire [3:0]  rs2_4b   = instr_reg[17:14];
     wire [3:0]  rs3_4b   = instr_reg[13:10];
+
     wire [17:0] imm18    = instr_reg[17:0];
     wire [63:0] imm_sext = {{46{imm18[17]}}, imm18};
 
@@ -124,6 +129,7 @@ module gpu_core_min (
     // ── ALU ───────────────────────────────────────────────────────
     wire signed [15:0] a0=rs1_data[15:0],  a1=rs1_data[31:16],
                        a2=rs1_data[47:32], a3=rs1_data[63:48];
+
     wire signed [15:0] b0=rs2_data[15:0],  b1=rs2_data[31:16],
                        b2=rs2_data[47:32], b3=rs2_data[63:48];
 
@@ -137,26 +143,27 @@ module gpu_core_min (
                                         (a1>0?a1:16'd0),(a0>0?a0:16'd0)};
             `OP_LDI:      alu_result = imm_sext;
             `OP_READ_TID: alu_result = 64'd0;
-            `OP_LD64, `OP_LDW64: alu_result = rs1_data + imm_sext; // ADDED LDW64
+            `OP_LD64, `OP_LDW64, `OP_LDB64: alu_result = rs1_data + imm_sext; // ADDED LDB64
             `OP_ST64:     alu_result = rs1_data + imm_sext;
             default:      alu_result = 64'd0;
         endcase
     end
 
-    // ── cmp_flag ──────────────────────────────────────────────────
     reg cmp_flag;
 
     // ── LD/ST Unit ────────────────────────────────────────────────
     reg  [31:0] ldst_byte_addr;
-    reg  [31:0] ldw_byte_addr; // NEW
+    reg  [31:0] ldw_byte_addr;
+    reg  [31:0] ldb_byte_addr; // NEW FOR BIAS
+
     reg  [63:0] ldst_st_data;
     reg         ldst_st_en;
 
     wire [7:0]  ld_bram_addr;
     wire [63:0] ld_data;
     
-    wire [7:0]  rd_weight_addr; // NEW
-    wire [63:0] ldw_data;       // NEW
+    wire [7:0]  rd_weight_addr; 
+    wire [63:0] ldw_data;
 
     wire [7:0]  st_bram_addr;
     wire [71:0] st_bram_wdata;
@@ -168,10 +175,10 @@ module gpu_core_min (
         .bram_rdata    (bram_rdata),
         .ld_data       (ld_data),
         
-        .ldw_byte_addr (ldw_byte_addr),   // NEW
-        .rd_weight_addr(rd_weight_addr),  // NEW
-        .weight_rdata  (weight_rdata),    // NEW
-        .ldw_data      (ldw_data),        // NEW
+        .ldw_byte_addr (ldw_byte_addr),   
+        .rd_weight_addr(rd_weight_addr),  
+        .weight_rdata  (weight_rdata),    
+        .ldw_data      (ldw_data),        
 
         .st_byte_addr  (ldst_byte_addr),
         .st_data       (ldst_st_data),
@@ -181,10 +188,15 @@ module gpu_core_min (
         .st_en         (ldst_st_en)
     );
 
+    // Memory Routing
     assign bram_addr   = ldst_st_en ? st_bram_addr  : ld_bram_addr;
     assign bram_wdata  = st_bram_wdata;
     assign bram_we     = st_bram_we;
-    assign weight_addr = rd_weight_addr; // NEW
+    assign weight_addr = rd_weight_addr;
+
+    // Bias addressing directly integrated
+    assign bias_addr   = {3'b0, ldb_byte_addr[7:3]};
+    wire [63:0] ldb_data = bias_rdata[63:0];
 
     // ── Intermediate result register ──────────────────────────────
     reg [63:0] exec_result;
@@ -199,7 +211,8 @@ module gpu_core_min (
             instr_reg      <= 32'd0;
             exec_result    <= 64'd0;
             ldst_byte_addr <= 32'd0;
-            ldw_byte_addr  <= 32'd0; // NEW
+            ldw_byte_addr  <= 32'd0;
+            ldb_byte_addr  <= 32'd0; // NEW
             ldst_st_data   <= 64'd0;
             ldst_st_en     <= 1'b0;
             rf_we          <= 1'b0;
@@ -213,7 +226,6 @@ module gpu_core_min (
 
             case (state)
 
-                // ── IDLE ─────────────────────────────────────────
                 S_IDLE: begin
                     done    <= 1'b0;
                     running <= 1'b0;
@@ -224,34 +236,23 @@ module gpu_core_min (
                     end
                 end
 
-                // ── FETCH: present pc address to BRAM ────────────
-                // [FIX 7] Do NOT latch instr_from_mem here — BRAM
-                // output is not valid until the next cycle.
                 S_FETCH: begin
                     if (pc >= PROG_LEN) begin
                         state <= S_DONE;
                     end else begin
-                        // pc is presented to BRAM Port A this cycle.
-                        // Transition to FETCH_WAIT; data valid next cycle.
                         state <= S_FETCH_WAIT;
                     end
                 end
 
-                // ── FETCH_WAIT: BRAM output now valid ────────────
-                // [FIX 7] instr_from_mem is now the instruction at pc.
                 S_FETCH_WAIT: begin
                     instr_reg <= instr_from_mem;
                     state     <= S_DECODE;
                 end
 
-                // ── DECODE: regfile reads issued ──────────────────
-                // Regfile is also synchronous BRAM — results valid
-                // in S_EXEC (one cycle later).
                 S_DECODE: begin
                     state <= S_EXEC;
                 end
 
-                // ── EXEC ─────────────────────────────────────────
                 S_EXEC: begin
                     case (opcode)
                         `OP_BF_MAC: begin
@@ -262,8 +263,12 @@ module gpu_core_min (
                             ldst_byte_addr <= alu_result[31:0];
                             state          <= S_MEM;
                         end
-                        `OP_LDW64: begin // NEW
+                        `OP_LDW64: begin
                             ldw_byte_addr <= alu_result[31:0];
+                            state         <= S_MEM;
+                        end
+                        `OP_LDB64: begin // NEW
+                            ldb_byte_addr <= alu_result[31:0];
                             state         <= S_MEM;
                         end
                         `OP_ST64: begin
@@ -296,29 +301,23 @@ module gpu_core_min (
                     endcase
                 end
 
-                // ── MEM ───────────────────────────────────────────
                 S_MEM: begin
                     if (opcode == `OP_BF_MAC) begin
                         if (tensor_done) begin
                             exec_result <= tensor_result;
                             state       <= S_WB;
                         end
-                        // else: stay, tensor still computing
                     end else begin
-                        // LD64: address presented last cycle;
-                        // BRAM data valid now → go to MEM2.
                         state <= S_MEM2;
                     end
                 end
 
-                // ── MEM2: capture BRAM LD data ────────────────────
                 S_MEM2: begin
-                    // Assign from appropriate memory interface
-                    exec_result <= (opcode == `OP_LDW64) ? ldw_data : ld_data; 
+                    exec_result <= (opcode == `OP_LDW64) ? ldw_data : 
+                                   (opcode == `OP_LDB64) ? ldb_data : ld_data; // ADDED LDB_DATA
                     state       <= S_WB;
                 end
 
-                // ── WB ────────────────────────────────────────────
                 S_WB: begin
                     if (rd_addr != 3'd0) begin
                         rf_we      <= 1'b1;
@@ -329,13 +328,16 @@ module gpu_core_min (
                     state <= S_FETCH;
                 end
 
-                // ── DONE ─────────────────────────────────────────
                 S_DONE: begin
                     done    <= 1'b1;
                     running <= 1'b0;
+                    // Minimal board-side fix:
+                    // a new start pulse should restart immediately from PC=0.
                     if (start) begin
-                        state <= S_IDLE;
-                        done  <= 1'b0;
+                        done    <= 1'b0;
+                        running <= 1'b1;
+                        pc      <= 5'd0;
+                        state   <= S_FETCH;
                     end
                 end
 
